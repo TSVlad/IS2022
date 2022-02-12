@@ -13,6 +13,7 @@ class Agent {
             if (this.run) {
                 switch (input) {
                     case 'w':
+                        console.log(123)
                         this.act = {
                             n: 'dash',
                             v: 100
@@ -68,7 +69,7 @@ class Agent {
                 this.initAgent(data.p)
                 break
         }
-        this.analyseEnv(data.msg, data.cmd, data.p)
+        this.analyzeEnv(data.msg, data.cmd, data.p)
     }
 
     initAgent(p) {
