@@ -1,13 +1,14 @@
 const Msg = require('./msg')
 const {rl} = require("./console");
-const {Flags, getCoordinatesBy3Points} = require("./field");
+const {Flags, getCoordinatesBy3Points, getObjectCoordinates} = require("./field");
+const {parseVisibleData} = require("./msg");
 class Agent {
     constructor() {
         this.turnSpeed = 0
         this.shouldTurn = false
         this.printable = false
 
-        this.position = "l"
+        this.side = 'l'
         this.run = false
         this.act = null
         this.rl = rl
@@ -125,39 +126,58 @@ class Agent {
         }
     }
 
-    printCoordinates(data) {
-        const flags = this.getFlags(data, 3)
-        if (flags.length >= 3) {
-            const coordinates = getCoordinatesBy3Points(flags.sort((f1, f2) => f1.distance - f2.distance))
-            console.log(coordinates)
+    checkXLine(flags) {
+        if (flags[0].x === flags[1].x && flags[0].x === flags[2].x) {
+            let foundAnother = false;
+            for (let i = 3; i < flags.length; i++) {
+                foundAnother = flags[i].x !== flags[0].x
+                if (foundAnother) {
+                    break
+                }
+            }
+            return foundAnother
         } else {
-            console.log(`Few flags: ${flags.length}`)
+            return true
         }
     }
 
-    getFlags(data, limit) {
-        const flags = []
-        for (let i = 1; i < data.p.length; i++) {
-            let flagName = ''
-            for (const letter of data.p[i].cmd.p) {
-                flagName += letter
+    checkYLine(flags) {
+        if (flags[0].y === flags[1].y && flags[0].y === flags[2].y) {
+            let foundAnother = false;
+            for (let i = 3; i < flags.length; i++) {
+                foundAnother = flags[i].y !== flags[0].y
+                if (foundAnother) {
+                    break
+                }
             }
-            const potentialCoordinates = Flags[flagName]
-            if (!potentialCoordinates) {
-                continue
-            }
-
-            flags.push({
-                ...potentialCoordinates,
-                distance: data.p[i].p[0],
-                angle: data.p[i].p[1]
-            })
-
-            // if (flags.length === limit) {
-            //     break
-            // }
+            return foundAnother
+        } else {
+            return true
         }
-        return flags
+    }
+
+
+    printCoordinates(data) {
+        const objects =  parseVisibleData(data)
+
+        if (objects.flags.length >= 3) {
+
+            if (!this.checkXLine(objects.flags) || !this.checkYLine(objects.flags)) {
+                console.log('SAME LINE FLAGS')
+                return
+            }
+
+            const coordinates = getCoordinatesBy3Points(objects.flags.sort((f1, f2) => f1.distance - f2.distance))
+            console.log(`My coordinates: ${coordinates.x}, ${coordinates.y}`)
+            if (objects.players.length > 0) {
+                const anotherPlayerCoordinates = getObjectCoordinates(coordinates, objects.flags, objects.players[0])
+                console.log(`Another player coordinates: ${anotherPlayerCoordinates.x}, ${anotherPlayerCoordinates.y}`)
+
+            }
+
+        } else {
+            console.log(`Few flags: ${objects.flags.length}`)
+        }
     }
 
     handleHear(data) {

@@ -1,16 +1,3 @@
-
-/*
-const getA = (points) => alpha(points) ** 2 + 1
-
-const getB = (points) => -2 * (alpha(points) * (points[0].coordinates.x - beta(points)) + points[0].coordinates.y)
-
-const getC = (points) => (points[0].coordinates.x - beta(points)) ** 2 + points[0].coordinates.y ** 2 - points[0].distance ** 2
-
-const alpha = (points) => (points[0].coordinates.y - points[1].coordinates.y)/(points[1].coordinates.x - points[0].coordinates.x)
-
-const beta = (points) => (points[1].coordinates.y ** 2 - points[0].coordinates.y ** 2 + points[1].coordinates.x ** 2 - points[0].coordinates.x ** 2 + points[0].distance ** 2 - points[1].distance ** 2)/(2 * (points[1].coordinates.x - points[0].coordinates.x))
-*/
-
 const Flags = {
     //TOP LINE
     ftl50: {x: -50, y: -39},
@@ -92,31 +79,6 @@ const distance = (p1, p2) => {
     return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2)
 }
 
-/*const getCoordinatesBy2Points = (points) => {
-    console.log(`Points: ${points.length}`)
-    const a = getA(points)
-    const b = getB(points)
-    const c = getC(points)
-
-    const sqrtY = Math.sqrt(b**2 - 4 * a * c)
-    let y = (-b + sqrtY)/(2 * a)
-    console.log(`Y1: ${y}`)
-    let y2 = (-b - sqrtY)/(2 * a)
-    console.log(`Y2: ${y2}`)
-    if (isNaN(y) || y < -39 || y > 39) {
-        y = y2
-    }
-    const sqrtX = Math.sqrt(points[0].distance ** 2 - (y - points[0].coordinates.y) ** 2)
-    let x = points[0].coordinates.x + sqrtX;
-    console.log(`X1: ${x}`)
-    let x2 = points[0].coordinates.x - sqrtX;
-    console.log(`X2: ${x2}`)
-    if (isNaN(x) || x < -57.5 || x > 57.5) {
-        x = x2
-    }
-    return {x, y}
-}*/
-
 const alpha1F = (points) => (points[0].y - points[1].y)/(points[1].x - points[0].x)
 
 const alpha2F = (points) => (points[0].y - points[2].y)/(points[2].x - points[0].x)
@@ -125,17 +87,95 @@ const beta1F = (points) => (points[1].y ** 2 - points[0].y ** 2 + points[1].x **
 
 const beta2F = (points) => (points[2].y ** 2 - points[0].y ** 2 + points[2].x ** 2 - points[0].x ** 2 + points[0].distance ** 2 - points[2].distance ** 2)/(2 * (points[2].x - points[0].x))
 
+const getXByY = (y, points) => {
+    let sqrtX = Math.sqrt(points[0].distance ** 2 - (y - points[0].y) ** 2)
+    if (!sqrtX) {
+        // console.log('NAN SQRT X')
+        sqrtX = 0
+    }
+    const x1 = points[0].x + sqrtX;
+    const x2 = points[0].x - sqrtX;
+    const m1 = Math.abs((x1 - points[2].x) ** 2 + (y - points[2].y) ** 2 - points[2].distance ** 2)
+    const m2 = Math.abs((x2 - points[2].x) ** 2 + (y - points[2].y) ** 2 - points[2].distance ** 2)
+    // console.log(`x1: ${x1} y2: ${x2} m1: ${m1} m2: ${m2}`)
+    if (m2 < m1) {
+        return x2
+    }
+    return x1
+}
+
+const solutionForSameX = (points) => {
+    // console.log('SAME X')
+    const y = (points[1].y ** 2 - points[0].y ** 2 + points[0].distance ** 2 - points[1].distance ** 2)/(2 * (points[1].y - points[0].y))
+    const x = getXByY(y, points)
+    return {x, y}
+}
+
+const getYByX = (x, points) => {
+    let sqrtY = Math.sqrt(points[0].distance ** 2 - (x - points[0].x) ** 2)
+
+    if (!sqrtY) {
+        // console.log('NAN SQRT Y')
+        sqrtY = 0
+    }
+
+    const y1 = points[0].y + sqrtY;
+    const y2 = points[0].y - sqrtY;
+    const m1 = Math.abs((x - points[2].x) ** 2 + (y1 - points[2].y) ** 2 - points[2].distance ** 2)
+    const m2 = Math.abs((x - points[2].x) ** 2 + (y2 - points[2].y) ** 2 - points[2].distance ** 2)
+    // console.log(`y1: ${y1} y2: ${y2} m1: ${m1} m2: ${m2}`)
+    if (m2 < m1) {
+        return y2
+    }
+    return y1
+}
+
+const solutionForSameY = (points) => {
+    // console.log('SAME Y')
+    const x = (points[1].x ** 2 - points[0].x ** 2 + points[0].distance ** 2 - points[1].distance ** 2)/(2 * (points[1].x - points[0].x))
+    const y = getYByX(x, points)
+    return {x, y}
+}
+
+const getPointWhereYNotEquals = (y, points, from) => {
+    for (let i = from; i < points.length; i++) {
+        if (points[i].y !== y) {
+            return points[i]
+        }
+    }
+    // console.log('FEW POINTS')
+}
+
+const getPointWhereXNotEquals = (x, points, from) => {
+    for (let i = from; i < points.length; i++) {
+        if (points[i].x !== x) {
+            return points[i]
+        }
+    }
+}
+
 const getCoordinatesBy3Points = (points) => {
+    // console.log(points)
+    if (points[0].x === points[1].x) {
+        return solutionForSameX([points[0], points[1], getPointWhereXNotEquals(points[0].x, points, 2)])
+    }
+    if (points[0].x === points[2].x) {
+        return solutionForSameX([points[0], points[2], points[1]])
+    }
+
+    if (points[0].y === points[1].y) {
+        return solutionForSameY([points[0], points[1], getPointWhereYNotEquals(points[0].y, points, 2)])
+    }
+    if (points[0].y === points[2].y) {
+        return solutionForSameY([points[0], points[2], points[1]])
+    }
+
     const alpha1 = alpha1F(points)
     const alpha2 = alpha2F(points)
     const beta1 = beta1F(points)
     const beta2 = beta2F(points)
 
-    console.log(points)
-    console.log(alpha1)
-    console.log(alpha2)
-    console.log(beta1)
-    console.log(beta2)
+    // console.log(alpha1, beta1, alpha2, beta2)
 
     const y = (beta1 - beta2)/(alpha2 - alpha1)
     const x = alpha1 * y + beta1
@@ -143,6 +183,50 @@ const getCoordinatesBy3Points = (points) => {
     return {x,y}
 }
 
+const getDistanceToObject = (d1, alpha1, dA, alphaA) => {
+    return Math.sqrt(d1 ** 2 + dA ** 2 - 2 * d1 * dA * Math.cos(Math.abs(degToRad(alpha1) - degToRad(alphaA))))
+}
+
+const degToRad = (deg) => {
+    return (Math.PI * deg) / 180;
+}
+
+const getObjectCoordinates = (coordinates, points, object) => {
+
+    const pointsForGettingCoordinates= [];
+    pointsForGettingCoordinates.push({
+        ...coordinates,
+        distance: object.distance
+    })
+
+    pointsForGettingCoordinates.push({
+        x: points[0].x,
+        y: points[0].y,
+        distance: getDistanceToObject(points[0].distance, points[0].angle, object.distance, object.angle)
+    })
+
+    let newPoint;
+
+    if (coordinates.x === points[0].x && coordinates.x === points[1].x) {
+        newPoint = getPointWhereXNotEquals(coordinates.x, points, 2)
+
+    } else if (coordinates.y === points[0].y && coordinates.y === points[1].y) {
+        newPoint = getPointWhereYNotEquals(coordinates.y, points, 2)
+
+    } else {
+        newPoint = points[1]
+    }
+
+    pointsForGettingCoordinates.push({
+        x: newPoint.x,
+        y: newPoint.y,
+        distance: getDistanceToObject(newPoint.distance, newPoint.angle, object.distance, object.angle)
+    })
+
+    return getCoordinatesBy3Points(pointsForGettingCoordinates)
+
+}
+
 module.exports = {
-    Flags, getCoordinatesBy3Points
+    Flags, getCoordinatesBy3Points, getObjectCoordinates
 }
