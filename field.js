@@ -49,9 +49,9 @@ const Flags = {
     fglb: {x: -52.5, y: 7.01},
 
     //RIGHT GOALS
-    fgrt: {x: -52.5, y: -7.01},
-    fgr: {x: -52.5, y: 0},
-    fgrb: {x: -52.5, y: 7.01},
+    fgrt: {x: 52.5, y: -7.01},
+    fgr: {x: 52.5, y: 0},
+    fgrb: {x: 52.5, y: 7.01},
 
     //CENTER LINE
     fct: {x: 0, y: -34},

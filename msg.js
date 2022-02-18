@@ -65,7 +65,8 @@ module.exports = {
                     result.flags.push({
                         ...potentialCoordinates,
                         distance: data.p[i].p[0],
-                        angle: data.p[i].p[1]
+                        angle: data.p[i].p[1],
+                        name: flagName
                     })
                     break
                 case 'p':
