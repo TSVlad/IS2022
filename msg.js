@@ -58,6 +58,7 @@ module.exports = {
                 case 'f':
                 case 'g':
                     let flagName = ''
+
                     for (const letter of data.p[i].cmd.p) {
                         flagName += letter
                     }
