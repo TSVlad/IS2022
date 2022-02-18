@@ -49,25 +49,29 @@ module.exports = {
     parseVisibleData(data) {
         const result = {
             flags: [],
-            players: []
+            players: [],
+            ball: null
         }
+
         for (let i = 1; i < data.p.length; i++) {
             switch(data.p[i].cmd.p[0]) {
                 case 'f':
+                case 'g':
                     let flagName = ''
                     for (const letter of data.p[i].cmd.p) {
                         flagName += letter
                     }
+
                     const potentialCoordinates = Flags[flagName]
                     if (!potentialCoordinates) {
                         continue
                     }
-                    result.flags.push({
+                    result.flags[flagName] = {
                         ...potentialCoordinates,
                         distance: data.p[i].p[0],
                         angle: data.p[i].p[1],
                         name: flagName
-                    })
+                    }
                     break
                 case 'p':
                     result.players.push({
@@ -75,8 +79,14 @@ module.exports = {
                         angle: data.p[i].p[1]
                     })
                     break
+                case 'b':
+                    result.ball = {
+                        distance: data.p[i].p[0],
+                        angle: data.p[i].p[1]
+                    }
+                    break
                 default:
-                // console.log('undefined object')
+                    // console.log(`UNDEFINED: ${data.p[i].cmd.p[0]} in ${data.p[i].cmd.p}`)
             }
         }
         return result

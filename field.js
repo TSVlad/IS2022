@@ -45,12 +45,12 @@ const Flags = {
 
     //LEFT GOALS
     fglt: {x: -52.5, y: -7.01},
-    fgl: {x: -52.5, y: 0},
+    gl: {x: -52.5, y: 0},
     fglb: {x: -52.5, y: 7.01},
 
     //RIGHT GOALS
     fgrt: {x: 52.5, y: -7.01},
-    fgr: {x: 52.5, y: 0},
+    gr: {x: 52.5, y: 0},
     fgrb: {x: 52.5, y: 7.01},
 
     //CENTER LINE
@@ -227,6 +227,47 @@ const getObjectCoordinates = (coordinates, points, object) => {
 
 }
 
+const checkXLine = (flags) => {
+    if (flags[0].x === flags[1].x && flags[0].x === flags[2].x) {
+        let foundAnother = false;
+        for (let i = 3; i < flags.length; i++) {
+            foundAnother = flags[i].x !== flags[0].x
+            if (foundAnother) {
+                break
+            }
+        }
+        return foundAnother
+    } else {
+        return true
+    }
+}
+
+const checkYLine = (flags) => {
+    if (flags[0].y === flags[1].y && flags[0].y === flags[2].y) {
+        let foundAnother = false;
+        for (let i = 3; i < flags.length; i++) {
+            foundAnother = flags[i].y !== flags[0].y
+            if (foundAnother) {
+                break
+            }
+        }
+        return foundAnother
+    } else {
+        return true
+    }
+}
+
+const getAgentCoordinates = (objects) => {
+    if (objects.flags.keys().length >= 3) {
+        if (!checkXLine(objects.flags) || !checkYLine(objects.flags.values())) {
+            return null
+        }
+        return getCoordinatesBy3Points(objects.flags.values().sort((f1, f2) => f1.distance - f2.distance))
+    } else {
+        return null;
+    }
+}
+
 module.exports = {
-    Flags, getCoordinatesBy3Points, getObjectCoordinates
+    Flags, getAgentCoordinates, getObjectCoordinates, checkYLine, checkXLine
 }
