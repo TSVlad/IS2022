@@ -2,14 +2,16 @@ const Msg = require("./msg");
 const {parseVisibleData} = require("./msg");
 const {getAgentCoordinates, getObjectCoordinates} = require("./field");
 
+const actions = [
+    // {act: "go_to_object", objName: "frb", targetDist: 3},
+    // {act: "go_to_object", objName: "gl", targetDist: 3},
+    // {act: "go_to_object", objName: "fc", targetDist: 3},
+    {act: "kick", objName: "b", goal: "gl"}]
+
 class Controller {
 
     constructor() {
-        this.actions = [
-            {act: "go_to_object", objName: "frb"},
-            {act: "go_to_object", objName: "gl"},
-            {act: "go_to_object", objName: "fc"},
-            /*{act: "kick", objName: "b", goal: "gr"}*/]
+        this.actions = [...actions]
     }
 
     processMsg(msg) {
@@ -57,6 +59,7 @@ class Controller {
                     this.goToObject()
                     break
                 case 'kick':
+                    this.kick()
                     break
             }
         }
@@ -72,22 +75,51 @@ class Controller {
                     v: obj.angle
                 }
             } else {
-                if (obj.distance < 3) {
+                if (obj.distance < this.actions[0].targetDist) {
                     this.finishAction()
+                    return
                 }
                 this.agent.act = {
                     n: 'dash',
-                    v: 100
+                    v: obj.distance < this.actions[0].targetDist + 2 ? 50 : 100
                 }
             }
         } else {
-            // console.log(this.agent.visibleObjects)
             this.agent.act = {
                 n: 'turn',
                 v: 45
             }
         }
     }
+
+    kick() {
+        const objToKick = this.getObjectFromVisible(this.actions[0].objName)
+        const directionToKick = this.getObjectFromVisible(this.actions[0].goal)
+
+        if (!objToKick || objToKick.distance >= 0.5) {
+            console.log('RUN TO BALL')
+            this.actions.unshift({
+                act: 'go_to_object',
+                objName: 'b',
+                targetDist: 0.5
+            })
+        } else if (!directionToKick) {
+            this.agent.act = {
+                n: 'kick',
+                v: 5,
+                a: 45
+            }
+        } else {
+            console.log('KICK BALL')
+            this.agent.act = {
+                n: 'kick',
+                v: 100,
+                a: this.getObjectFromVisible(this.actions[0].goal).angle
+            }
+        }
+    }
+
+
 
     finishAction() {
         this.actions.shift()
@@ -110,15 +142,13 @@ class Controller {
         }
     }
 
-    kick(){
-
-    }
-
     handleHear(data) {
         if (data.p[2] === 'play_on') {
             console.log('PLAY ON')
             this.agent.active = true
         } else if (data.p[2].startsWith('goal')) {
+            this.actions = [...actions]
+            this.agent.active = false
             // TODO action on a goal
         }
 
