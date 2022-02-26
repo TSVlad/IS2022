@@ -1,21 +1,23 @@
 const Msg = require("./msg");
 const {parseVisibleData} = require("./msg");
 const {getAgentCoordinates, getObjectCoordinates} = require("./field");
-
-const actions = [
-    // {act: "go_to_object", objName: "frb", targetDist: 3},
-    // {act: "go_to_object", objName: "gl", targetDist: 3},
-    // {act: "go_to_object", objName: "fc", targetDist: 3},
-    {act: "kick", objName: "b", goal: "gl"}]
+const Manager = require("./Manager");
 
 class Controller {
 
+
     constructor() {
-        this.actions = [...actions]
+        this.mgr = new Manager()
+        this.mgr.setController(this)
     }
 
     processMsg(msg) {
         let data = Msg.parseMsg(msg)
+
+        if (this.agent.active) {
+            console.log(msg)
+        }
+
         if (!data) {
             throw new Error("Parse error\n" + msg)
         }
@@ -43,16 +45,14 @@ class Controller {
     handleSee(data) {
         if (this.agent.active) {
 
-            this.agent.visibleObjects = parseVisibleData(data)
-            this.agent.coordinates = getAgentCoordinates(this.agent.visibleObjects)
+            this.visibleObjects = parseVisibleData(data)
+            this.coordinates = getAgentCoordinates(this.visibleObjects)
 
-            this.doCurrentAction()
-
-            this.agent.sendCmd()
+            // this.mgr.doActions()
         }
     }
 
-    doCurrentAction() {
+    /*doCurrentAction() {
         if (this.actions.length > 0) {
             switch (this.actions[0].act) {
                 case 'go_to_object':
@@ -114,7 +114,7 @@ class Controller {
             this.agent.act = {
                 n: 'kick',
                 v: 100,
-                a: this.getObjectFromVisible(this.actions[0].goal).angle
+                a: directionToKick.angle
             }
         }
     }
@@ -124,9 +124,9 @@ class Controller {
     finishAction() {
         this.actions.shift()
         this.doCurrentAction()
-    }
+    }*/
 
-    getObjectFromVisible(objName) {
+    /*getObjectFromVisible(objName) {
         switch (objName.charAt(0)){
             case 'f':
             case 'g':
@@ -140,7 +140,7 @@ class Controller {
                 console.log('getObjectFromVisible: Undefined object')
 
         }
-    }
+    }*/
 
     handleHear(data) {
         if (data.p[2] === 'play_on') {
