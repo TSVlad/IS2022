@@ -43,7 +43,7 @@ const GKDecisionTree = {
             return !!ball && ball.distance > 20
         },
         trueCond: 'isFlagGoalVisible',
-        falseCond: 'isBallOnViewerDistance'
+        falseCond: 'isAngleToBallBig'
     },
 
     // 3
@@ -83,6 +83,7 @@ const GKDecisionTree = {
     isBallClose: {
         condition: (mgr, state) => {
             const ball = mgr.getVisibleBall()
+            console.log("IS_BALL_CLOSE", ball)
             return ball.distance <= 0.5
         },
         trueCond: 'isKickDirectionVisible',
@@ -92,6 +93,7 @@ const GKDecisionTree = {
     // 6
     isAngleToObjectBig: {
         condition: (mgr, state) =>{
+            console.log("IS_ANGLE_TO_OBJECT", mgr.getVisibleObject('b'))
             return Math.abs(mgr.getVisibleObject('b').angle) > 1
         } ,
         trueCond:"rotateToObject",
@@ -123,7 +125,12 @@ const GKDecisionTree = {
 
     // 9
     isKickDirectionVisible: {
-        condition: (mgr, state) => !!mgr.getVisibleObject(ENEMY_GOAL),
+        condition: (mgr, state) =>
+            !!mgr.getVisibleObject(ENEMY_GOAL)
+            || !!mgr.getVisibleObject('fct')
+            || !!mgr.getVisibleObject('fc')
+            || !!mgr.getVisibleObject('fcb'),
+
         trueCond:"strongKick",
         falseCond:"rotateWithBall",
     },
@@ -131,10 +138,15 @@ const GKDecisionTree = {
     // 10
     strongKick: {
         exec: (mgr, state) => {
+            var direction = mgr.getVisibleObject(ENEMY_GOAL)
+            direction = !!direction ? direction : mgr.getVisibleObject('fct')
+            direction = !!direction ? direction : mgr.getVisibleObject('fc')
+            direction = !!direction ? direction : mgr.getVisibleObject('fcb')
+
             state.command = {
                 n: 'kick',
                 v: 300,
-                a: mgr.getVisibleObject(ENEMY_GOAL).angle
+                a: direction.angle
             }
         },
         next: "sendCommand"
@@ -209,10 +221,6 @@ const GKDecisionTree = {
         condition: (mgr, state) => {
             const fpc = mgr.getVisibleObject(FPC)
             const centre = mgr.getVisibleObject('fc')
-            // const fpt = mgr.getVisibleObject(FPT)
-            // const fpb = mgr.getVisibleObject(FPB)
-            // return !!fpc && (!!fpt || !!fpb)
-
             return !!fpc && !!centre
         },
         trueCond: 'isFPRDistanceCorrect',
@@ -277,6 +285,51 @@ const GKDecisionTree = {
             }
         },
         next: 'sendCommand'
+    },
+
+    // 23
+    isAngleToBallBig: {
+        condition: (mgr, state) => Math.abs(mgr.getVisibleBall().angle) > 1,
+        trueCond: 'turnToBall',
+        falseCond: 'shouldKick'
+    },
+
+    // 24
+    isNeedToCatch: {
+        condition: (mgr, state) => {
+            const ball = mgr.getVisibleBall()
+            console.log('IS_NEED_TO_CATCH', ball)
+            return ball.distance <= 2
+        },
+        trueCond: 'catchBall',
+        falseCond: 'doGoToBall'
+    },
+
+    // 25
+    doNothing: {
+        exec: (mgr, state) => {
+            console.log('DO NOTHING')
+        },
+        next: 'sendCommand'
+    },
+
+    //26
+    doGoToBall: {
+        condition: (mgr, state) => mgr.getVisibleBall().distance < 15,
+        trueCond: 'goToBall',
+        falseCond: 'doNothing'
+    },
+
+    // 27
+    goToBall: {
+        exec: (mgr, state) => {
+            state.command = {
+                n: 'dash',
+                v: 200
+            }
+        },
+        next: 'sendCommand'
+
     },
 
     sendCommand: {

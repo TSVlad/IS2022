@@ -16,7 +16,7 @@ const DecisionTree = {
         sequence: [
             // {act: "go_to_object", objName: "fplc", targetDist: 3},
             // {act: "go_to_object", objName: "flt", targetDist: 3},
-            {act: "go_to_object", objName: "fc", targetDist: 3},
+            // {act: "go_to_object", objName: "fc", targetDist: 3},
             {act: "goal", objName: "b", goal: "gr"}
         ],
         command: null
