@@ -5,6 +5,8 @@ const DIST_TO_KICK = 0.5
 const ANGLE_BIGGER_THAN = 1
 // для 19
 const TARGET_DIST = 5
+// для 21
+const DIFF_ANGLE = 10
 // для 23
 const DISTANCE_TO_LEADER = 10
 
@@ -12,20 +14,37 @@ const DecisionTree = {
     state: {
         next: 0,
         sequence: [
-            {act: "go_to_object", objName: "frb", targetDist: 3},
-            {act: "go_to_object", objName: "gl ", targetDist: 3},
+            // {act: "go_to_object", objName: "fplc", targetDist: 3},
+            // {act: "go_to_object", objName: "flt", targetDist: 3},
             {act: "go_to_object", objName: "fc", targetDist: 3},
-            {act: "kick", objName: "b", goal: "gr"}
+            {act: "goal", objName: "b", goal: "gr"}
         ],
         command: null
     },
+
+    // state: {
+    //     next: 0,
+    //     sequence: [
+    //         // {act: "go_to_object", objName: "fplc", targetDist: 3},
+    //         // {act: "go_to_object", objName: "flt", targetDist: 3},
+    //         // {act: "go_to_object", objName: "fplt", targetDist: 3},
+    //         // {act: "go_to_object", objName: "gl", targetDist: 3},
+    //         // {act: "go_to_object", objName: "fglb", targetDist: 3},
+    //         // {act: "go_to_object", objName: "flb10", targetDist: 3},
+    //         // {act: "go_to_object", objName: "flb30", targetDist: 3},
+    //         // {act: "go_to_object", objName: "fbl40", targetDist: 3},
+    //         // {act: "go_to_object", objName: "fc", targetDist: 3},
+    //         {act: "goal", objName: "b", goal: "gl"}
+    //     ],
+    //     command: null
+    // },
 
     root: {
         exec: (mgr, state) => {
             state.action = state.sequence[state.next]
             state.command = null
         },
-        next: ''
+        next: 'roleKnown'
     },
 
     // 1
@@ -46,7 +65,7 @@ const DecisionTree = {
     amILeader: {
         condition: (mgr, state) => state.role === 'LEADER',
         trueCond:"didIReachGoal",
-        falseCond:"isMainTeammateReachedGoal",
+        falseCond:"doISeeLeader",
     },
 
     // 4
@@ -61,7 +80,7 @@ const DecisionTree = {
                 state.turnCoeff = -1
             }
         },
-        next: 'isMainTeammateReachedGoal'
+        next: 'doISeeLeader'
     },
 
     // 5
@@ -121,23 +140,23 @@ const DecisionTree = {
 
     // 12
     isBallVisible: {
-        condition: (mgr, state) => mgr.isBallVisible(),
+        condition: (mgr, state) => !!mgr.getVisibleBall(),
         trueCond:"isDistanceDifferenceSmall",
         falseCond:"rotate45",
     },
 
     // 13
     isDistanceDifferenceSmall: {
-        condition: (mgr, state) => mgr.canIKick(),
+        condition: (mgr, state) => mgr.getVisibleBall().distance <= DIST_TO_KICK,
         trueCond:"isKickDirectionVisible",
-        falseCond:"isStartAngleDifferenceBig",
+        falseCond:"isAngleToObjectBig",
     },
 
     // 14
     isKickDirectionVisible: {
-        condition: (mgr, state) => mgr.isObjectVisible(state.action.goal),
+        condition: (mgr, state) => !!mgr.getVisibleObject(state.action.goal),
         trueCond:"strongKick",
-        falseCond:"sendCommand",
+        falseCond:"rotateWithBall",
     },
 
     // 15
@@ -146,7 +165,7 @@ const DecisionTree = {
             state.command = {
                 n: 'kick',
                 v: 100,
-                a: mgr.getObject(state.action.goal).angle
+                a: mgr.getVisibleObject(state.action.goal).angle
             }
         },
         next: "sendCommand"
@@ -157,8 +176,8 @@ const DecisionTree = {
         exec: (mgr, state) => {
             state.command = {
                 n: 'kick',
-                v: 5,
-                a: 45
+                v: 3,
+                a: 60
             }
         },
         next: "sendCommand"
@@ -177,7 +196,9 @@ const DecisionTree = {
 
     // 18
     isAngleToObjectBig: {
-        condition: (mgr, state) => mgr.getObject(state.action.objName).angle > ANGLE_BIGGER_THAN,
+        condition: (mgr, state) =>{
+            return Math.abs(mgr.getVisibleObject(state.action.objName).angle) > ANGLE_BIGGER_THAN
+        } ,
         trueCond:"rotateToObject",
         falseCond:"goToObject",
     },
@@ -185,7 +206,7 @@ const DecisionTree = {
     // 19
     goToObject: {
         exec: (mgr, state) => {
-            const objDistance = mgr.getObject(state.action.objName).distance
+            const objDistance = mgr.getVisibleObject(state.action.objName).distance
             state.command = {
                 n: 'dash',
                 v: /*bjDistance < TARGET_DIST ? 50 : 100*/ 40
@@ -199,7 +220,7 @@ const DecisionTree = {
         exec: (mgr, state) => {
             state.command = {
                 n: 'turn',
-                v: mgr.getObject(state.action.objName).angle
+                v: mgr.getVisibleObject(state.action.objName).angle
             }
         },
         next: "sendCommand"
@@ -232,9 +253,9 @@ const DecisionTree = {
 
     // 23
     isStartDistanceDifferenceBig: {
-        condition: (mgr, state) => { // ?????
-            const distanceToLeader = mgr.getTeammate(state.leader).distance
-            return distanceToLeader > DISTANCE_TO_LEADER
+        condition: (mgr, state) => {
+            const distanceToLeader = mgr.getPlayer(state.leader).distance
+            return distanceToLeader > state.leader.distance
         },
         trueCond:"fastStepForward",
         falseCond:"isStartDistanceDifferenceSmall",
@@ -245,7 +266,7 @@ const DecisionTree = {
         exec: (mgr, state) => {
             state.command = {
                 n: 'dash',
-                v: 150
+                v: 200
             }
         },
         next: "sendCommand"
@@ -262,8 +283,14 @@ const DecisionTree = {
     },
 
     // 26
-    doNothing: {
-        exec: (mgr, state) => {}
+    stepForward: {
+        exec: (mgr, state) => {
+            // state.command = {
+            // n: 'dash',
+            // v: 100
+            // }
+        },
+        // next: "sendCommand"
     },
 
     // 27

@@ -49,14 +49,45 @@ class Manager {
         }
     }
 
-    getVisibleTeammates() {
-        // const objects = this.controller.visibleObjects
+    getVisibleTeammate() {
+        return  this.controller.visibleObjects.players
     }
+
     isGoalReached(action) {
-
+        switch (action.act) {
+            case 'go_to_object':
+                const flag = this.controller.visibleObjects.flags[action.objName]
+                return !!flag && flag.distance <= action.targetDist
+            case 'goal':
+                return false
+        }
     }
-    isObjectVisible(objName) {
 
+    isGoalReachedByLeader(action, leader) {
+        switch (action.act) {
+            case 'go_to_object':
+                const leaderNow = this.controller.visibleObjects.players.filter(player => player.number === leader.number && player.team === leader.team)[0]
+                const flag = this.controller.visibleObjects.flags[action.objName]
+                return flag && getDistanceBetweenObjects(leaderNow, flag) <= action.targetDist
+            case 'goal':
+                return false
+        }
+    }
+
+    getVisibleObject(objName) {
+        switch (objName.charAt(0)){
+            case 'f':
+            case 'g':
+                return this.controller.visibleObjects.flags[objName]
+            case 'p':
+                //TODO: add logic
+                break
+            case 'b':
+                return this.controller.visibleObjects.ball
+            default:
+                return undefined;
+
+        }
     }
 
     getVisibleBall() {
@@ -71,18 +102,12 @@ class Manager {
         return this.controller.visibleObjects.players
             .filter(player => player.team === playerInfo.team && player.number === playerInfo.number)[0]
     }
+
     sendCommand(command) {
         this.controller.agent.act = command
         this.controller.agent.sendCmd()
     }
 
-    isBallVisible() {
-
-    }
-
-    canIKick() {
-
-    }
 }
 
 module.exports = Manager
