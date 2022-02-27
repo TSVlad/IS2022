@@ -1,3 +1,4 @@
+const {getDistanceBetweenObjects} = require("./field");
 
 const CENTRE_GOAL_FLAG = 'gr'
 const FPC = 'fprc'
@@ -8,19 +9,29 @@ const ENEMY_GOAL = 'gl'
 const GKDecisionTree = {
 
     state: {
-
+        lastDistanceToBall: null,
+        lastAction: null
     },
 
     root: {
         exec: (mgr, state) => {
             state.command = null
+            if (state.currentDitanceToBall) {
+                state.lastDistanceToBall = state.currentDitanceToBall
+            }
         },
         next: 'isBallVisible'
     },
 
     // 1
     isBallVisible: {
-        condition: (mgr, state) => !!mgr.getVisibleBall(),
+        condition: (mgr, state) => {
+            const ball = mgr.getVisibleBall()
+            if (ball) {
+                state.currentDitanceToBall = ball.distance
+            }
+            return ball
+        },
         trueCond: 'isBallFar',
         falseCond: 'isFlagGoalVisible'
     },
@@ -29,21 +40,32 @@ const GKDecisionTree = {
     isBallFar: {
         condition: (mgr, state) => {
             const ball = mgr.getVisibleBall()
-            return !!ball && ball.distance > 30
+            return !!ball && ball.distance > 20
         },
         trueCond: 'isFlagGoalVisible',
         falseCond: 'isBallOnViewerDistance'
     },
 
     // 3
-    canCatchBall: {
+    shouldKick: {
         condition: (mgr, state) => {
             const ball = mgr.getVisibleBall()
-            const playersCloseToBall = mgr.controller.visibleObjects.players.filter(player => Math.abs(player.distance - ball.distance) < 5 )
-            return playersCloseToBall.length > 0
+            const fpc = mgr.getVisibleObject(FPC)
+            const fpt = mgr.getVisibleObject(FPT)
+            const fpb = mgr.getVisibleObject(FPB)
+            const pFlagVisible = fpc || fpt || fpb
+            const playersCloseToBall = mgr.controller.visibleObjects.players.filter(player => getDistanceBetweenObjects(player, ball) < ball.distance)
+            const result = playersCloseToBall.length === 0 && ball.distance >= state.lastDistanceToBall && pFlagVisible
+
+            console.log('%c3 SHOULD_KICK',"color:red")
+            console.log(result, ball)
+            console.log(' players to ball', playersCloseToBall)
+            console.log(' distance', ball.distance, state.lastDistanceToBall)
+            console.log('   flags', pFlagVisible)
+            return result
         },
-        trueCond: 'catchBall',
-        falseCond: 'isBallClose'
+        trueCond: 'isBallClose',
+        falseCond: 'isNeedToCatch'
     },
 
     // 4

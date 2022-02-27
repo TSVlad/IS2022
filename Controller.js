@@ -146,6 +146,8 @@ class Controller {
         console.log('HEAR', data.p[2])
         if (data.p[2] === 'play_on') {
             this.agent.active = true
+        } else if (data.p[2].startsWith('goalie_catch_ball_r')) {
+            // this.ballInHands = true
         } else if (data.p[2].startsWith('goal')) {
             this.agent.active = false
             // TODO action on a goal
