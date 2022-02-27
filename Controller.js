@@ -14,9 +14,9 @@ class Controller {
     processMsg(msg) {
         let data = Msg.parseMsg(msg)
 
-        if (this.agent.active) {
-            console.log(msg)
-        }
+        // if (this.agent.active) {
+        //     console.log(msg)
+        // }
 
         if (!data) {
             throw new Error("Parse error\n" + msg)
@@ -48,7 +48,7 @@ class Controller {
             this.visibleObjects = parseVisibleData(data)
             this.coordinates = getAgentCoordinates(this.visibleObjects)
 
-            // this.mgr.doActions()
+            this.mgr.doActions()
         }
     }
 
@@ -143,11 +143,10 @@ class Controller {
     }*/
 
     handleHear(data) {
+        console.log('HEAR', data.p[2])
         if (data.p[2] === 'play_on') {
-            console.log('PLAY ON')
             this.agent.active = true
         } else if (data.p[2].startsWith('goal')) {
-            this.actions = [...actions]
             this.agent.active = false
             // TODO action on a goal
         }

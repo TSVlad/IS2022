@@ -1,4 +1,6 @@
-const GO = 'go_to_object', KICK = 'kick'
+const GO = 'go_to_object', GOAL = 'goal'
+// для 13
+const DIST_TO_KICK = 0.5
 // для 18
 const ANGLE_BIGGER_THAN = 1
 // для 19
@@ -30,14 +32,14 @@ const DecisionTree = {
     roleKnown: {
         condition: (mgr, state) => !!state.role,
         trueCond:"amILeader",
-        falseCond:"teammateVisible",
+        falseCond:"teammatesVisible",
     },
 
     // 2
-    teammateVisible: {
-        condition: (mgr, state) => mgr.isTeammateVisible(),
-        trueCond:"becomeSlave",
-        falseCond:"becomeLeader",
+    teammatesVisible: {
+        condition: (mgr, state) => mgr.isTeammatesVisible(),
+        trueCond:"chooseLeader",
+        falseCond:"didITurnLeft",
     },
 
     // 3
@@ -51,7 +53,13 @@ const DecisionTree = {
     becomeSlave: {
         exec: (mgr, state) => {
             state.role = 'SLAVE'
-            state.leader = mgr.getVisibleTeammate()
+            if (!state.turnedLeft && ! state.turnedRight) {
+                state.turnCoeff = state.leader.angle > 0 ? -1 : 1
+            } else if (state.turnedLeft && ! state.turnedRight) {
+                state.turnCoeff = 1
+            } else {
+                state.turnCoeff = -1
+            }
         },
         next: 'isMainTeammateReachedGoal'
     },
@@ -73,9 +81,10 @@ const DecisionTree = {
 
     // 7
     isMainTeammateReachedGoal: {
-        condition: (mgr, state) => mgr.isGoalReached(state.action, state.leader),
+        condition: (mgr, state) => mgr.isGoalReachedByLeader(state.action, state.leader),
         trueCond:"finishSlaveGoal",
-        falseCond:"isAngleDifferenceBig",
+        // falseCond:"isStartAngleDifferenceBig",
+        falseCond:"isDistanceSmall"
     },
 
     // 8
@@ -105,7 +114,7 @@ const DecisionTree = {
 
     // 11
     isFlagVisible: {
-        condition: (mgr, state) => mgr.isObjectVisible(state.action.objName),
+        condition: (mgr, state) => !!mgr.getVisibleObject(state.action.objName),
         trueCond:"isAngleToObjectBig",
         falseCond:"rotate45",
     },
@@ -179,7 +188,7 @@ const DecisionTree = {
             const objDistance = mgr.getObject(state.action.objName).distance
             state.command = {
                 n: 'dash',
-                v: objDistance < TARGET_DIST ? 50 : 100
+                v: /*bjDistance < TARGET_DIST ? 50 : 100*/ 40
             }
         },
         next: "sendCommand"
@@ -198,15 +207,20 @@ const DecisionTree = {
 
     // 21
     isStartAngleDifferenceBig: {
-        condition: (mgr, state) => mgr.isStartAngleDifferenceBig(state.leader),
+        condition: (mgr, state) => {
+            const leader = mgr.getPlayer(state.leader)
+            return Math.abs(leader.angle) > DIFF_ANGLE
+        },
         trueCond:"turnToStartAngle",
         falseCond:"isStartDistanceDifferenceBig",
     },
 
+
+
     // 22
     turnToStartAngle: {
         exec: (mgr, state) => {
-            const currentLeader = mgr.getTeammate(state.leader)
+            const currentLeader = mgr.getPlayer(state.leader)
             const angle = (state.leader.angle + currentLeader.angle) / 2
             state.command = {
                 n: 'turn',
@@ -239,8 +253,11 @@ const DecisionTree = {
 
     // 25
     isStartDistanceDifferenceSmall: {
-        condition: (mgr, state) => true,
-        trueCond:"doNothing",
+        condition: (mgr, state) => {
+            const distanceToLeader = mgr.getPlayer(state.leader).distance
+            return distanceToLeader < state.leader.distance
+        },
+        trueCond:"stepForward",
         falseCond:"stepBackward",
     },
 
@@ -259,6 +276,164 @@ const DecisionTree = {
        },
        next: "sendCommand"
    },
+
+    // 28
+    chooseLeader: {
+        exec: (mgr, state) => {
+            state.leader = mgr.chooseLeader(state.turnedRight)
+            console.log('LEADER:', state.leader)
+        },
+        next: "becomeSlave"
+    },
+
+    // 29
+    didITurnLeft:{
+        condition: (mgr, state) => state.turnedLeft,
+        trueCond:"didITurnRight",
+        falseCond:"fixLeftTurn",
+    },
+
+    // 30
+    fixLeftTurn: {
+        exec: (mgr, state) => {
+            state.turnedLeft = true
+        },
+        next: "turnLeftInBeginning"
+    },
+
+    //31
+    turnLeftInBeginning: {
+        exec: (mgr, state) => {
+            state.command = {
+                n: 'turn',
+                v: -45
+            }
+        },
+        next: "sendCommand"
+    },
+
+    // 32
+    didITurnRight:{
+        condition: (mgr, state) => state.turnedRight,
+        trueCond:"becomeLeader",
+        falseCond:"fixRightTurn",
+    },
+
+    // 33
+    fixRightTurn: {
+        exec: (mgr, state) => {
+            state.turnedRight = true
+        },
+        next: "turnRightInBeginning"
+
+    },
+
+    // 34
+    turnRightInBeginning: {
+        exec: (mgr, state) => {
+            state.command = {
+                n: 'turn',
+                v: 90
+            }
+        },
+        next: "sendCommand"
+    },
+
+    //35
+    isDistanceSmall: {
+        condition: (mgr, state) => {
+            const currentLeader = mgr.getPlayer(state.leader)
+            return currentLeader.distance < 5
+        },
+        trueCond: 'turnToLeader',
+        falseCond: 'isDistanceBig'
+    },
+
+    //36
+    isDistanceBig: {
+        condition: (mgr, state) => {
+            const currentLeader = mgr.getPlayer(state.leader)
+            return currentLeader.distance > 10
+        },
+        trueCond:"isAngleBigOrSmall",
+        falseCond:"doYouSeeLeaderWithAngle",
+    },
+
+    // 37
+    turnToLeader: {
+        exec: (mgr, state) => {
+            const currentLeader = mgr.getPlayer(state.leader)
+            state.command = {
+                n: 'turn',
+                v: currentLeader.angle
+            }
+        },
+        next: "sendCommand"
+    },
+
+    // 38
+    isAngleBigOrSmall: {
+        condition: (mgr, state) => {
+            const currentLeader = mgr.getPlayer(state.leader)
+            return Math.abs(currentLeader.angle) > 35 || Math.abs(currentLeader.angle) < 25
+        },
+        trueCond: 'turnToLeaderWithAngle',
+        falseCond: 'fastStep'
+    },
+
+    // 39
+    doYouSeeLeaderWithAngle: {
+        condition: (mgr, state) => {
+            const currentLeader = mgr.getPlayer(state.leader)
+            return !(Math.abs(currentLeader.angle) > 35 || Math.abs(currentLeader.angle) < 25)
+        },
+        trueCond: 'stepForwardNormally',
+        falseCond: 'turnToLeaderWithAngle'
+    },
+
+    // 40
+    fastStep: {
+        exec: (mgr, state) => {
+            state.command = {
+                n: 'dash',
+                v: 100
+            }
+        },
+        next: "sendCommand"
+    },
+
+    // 41
+    turnToLeaderWithAngle: {
+        exec: (mgr, state) => {
+            const currentLeader = mgr.getPlayer(state.leader)
+            state.command = {
+                n: 'turn',
+                v: currentLeader.angle + 30 * state.turnCoeff
+                // v: currentLeader.angle > 0 ? currentLeader.angle - 30 : currentLeader.angle < 0 ?  currentLeader.angle + 30 : 0
+            }
+        },
+        next: "sendCommand"
+    },
+
+    // 42
+    stepForwardNormally: {
+        exec: (mgr, state) => {
+            state.command = {
+                n: 'dash',
+                v: 40
+            }
+        },
+        next: "sendCommand"
+    },
+
+    // 43
+    doISeeLeader: {
+        condition: (mgr, state) => !!mgr.getPlayer(state.leader),
+        trueCond: 'isMainTeammateReachedGoal',
+        falseCond: 'rotate45'
+    },
+
+
 
    sendCommand: {
         exec: (mgr, state) => {

@@ -268,6 +268,8 @@ const getAgentCoordinates = (objects) => {
     }
 }
 
+const getDistanceBetweenObjects = (obj1, obj2) => Math.sqrt(obj1.distance**2 + obj2.distance**2 - 2 * obj1.distance * obj2.distance * Math.cos(degToRad(Math.abs(obj1.angle - obj2.angle))))
+
 module.exports = {
-    Flags, getAgentCoordinates, getObjectCoordinates, checkYLine, checkXLine
+    Flags, getAgentCoordinates, getObjectCoordinates, checkYLine, checkXLine, getDistanceBetweenObjects
 }

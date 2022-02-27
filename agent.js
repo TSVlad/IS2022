@@ -1,7 +1,7 @@
 const Controller = require("./Controller");
 class Agent {
 
-    constructor() {
+    constructor(team) {
         this.side = 'l'
         this.act = null
 
@@ -9,6 +9,7 @@ class Agent {
         this.visibleObject = null
         this.coorfinates = null
         this.id = null
+        this.team = team
 
         this.controller = new Controller()
         this.controller.setAgent(this)
