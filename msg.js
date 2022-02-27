@@ -78,8 +78,8 @@ module.exports = {
                     result.players.push({
                         distance: data.p[i].p[0],
                         angle: data.p[i].p[1],
-                        team: data.p[i].cmd.p[1].replace(/"/g, ''),
-                        number: data.p[i].cmd.p[2],
+                        team: data.p[i].cmd.p[1] ? data.p[i].cmd.p[1].replace(/"/g, '') : undefined,
+                        number: data.p[i].cmd.p[2] ? data.p[i].cmd.p[2] : undefined,
                     })
                     break
                 case 'b':

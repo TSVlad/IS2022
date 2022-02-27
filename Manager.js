@@ -1,9 +1,11 @@
 const DecisionTree = require("./DecisionTree");
 const {getObjectCoordinates, getDistanceBetweenObjects} = require("./field");
+const GKDecisionTree = require("./GKDecisionTree");
 
 class Manager {
 
     constructor() {
+        this.dt = process.env.GK ? GKDecisionTree : DecisionTree
     }
 
     setController(controller) {
@@ -11,27 +13,27 @@ class Manager {
     }
 
     doActions() {
-        let currentVertex = DecisionTree.root
+        let currentVertex = this.dt.root
         while (!!currentVertex.next || currentVertex.trueCond) {
 
             if (currentVertex.exec) {
-                currentVertex.exec(this, DecisionTree.state)
+                currentVertex.exec(this, this.dt.state)
                 console.log(currentVertex.next)
-                currentVertex = DecisionTree[currentVertex.next]
+                currentVertex = this.dt[currentVertex.next]
             } else if (currentVertex.condition) {
-                const next = currentVertex.condition(this, DecisionTree.state) ? currentVertex.trueCond : currentVertex.falseCond
-                currentVertex = DecisionTree[next]
+                const next = currentVertex.condition(this, this.dt.state) ? currentVertex.trueCond : currentVertex.falseCond
+                currentVertex = this.dt[next]
                 console.log(next)
             } else {
                 return
             }
 
         }
-        currentVertex.exec(this, DecisionTree.state)
+        currentVertex.exec(this, this.dt.state)
     }
 
     isTeammatesVisible() {
-        return this.controller.visibleObjects.players.length > 0
+        return this.controller.visibleObjects.players.filter(player => player.team === this.controller.agent.team).length > 0
     }
 
     chooseLeader(turnedRight) {
