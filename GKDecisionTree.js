@@ -10,7 +10,19 @@ const GKDecisionTree = {
 
     state: {
         lastDistanceToBall: null,
-        lastAction: null
+        lastAction: null,
+        angleToTurnFromCenter: null,
+
+        addAngle: angle => {
+            const newAngle = this.angleToTurnFromCenter + angle
+            if (newAngle > 180){
+                this.angleToTurnFromCenter = -360  + newAngle
+            } else if (newAngle < -180){
+                this.angleToTurnFromCenter = 360 + newAngle
+            } else {
+                this.angleToTurnFromCenter = newAngle
+            }
+        }
     },
 
     root: {
@@ -55,7 +67,7 @@ const GKDecisionTree = {
             const fpb = mgr.getVisibleObject(FPB)
             const pFlagVisible = fpc || fpt || fpb
             const playersCloseToBall = mgr.controller.visibleObjects.players.filter(player => getDistanceBetweenObjects(player, ball) < ball.distance)
-            const result = playersCloseToBall.length === 0 && ball.distance >= state.lastDistanceToBall && pFlagVisible
+            const result = playersCloseToBall.length === 0 && ball.distance >= state.lastDistanceToBall && !!pFlagVisible
 
             console.log('SHOULD_KICK')
             console.log(result, ball)
@@ -115,6 +127,9 @@ const GKDecisionTree = {
     // 8
     rotateToObject: {
         exec: (mgr, state) => {
+            console.log('TURNING AFTER 3')
+
+            state.addAngle(mgr.getVisibleObject('b').angle)
             state.command = {
                 n: 'turn',
                 v: mgr.getVisibleObject('b').angle
@@ -207,6 +222,7 @@ const GKDecisionTree = {
     // 16
     turnToFlagGoal: {
         exec: (mgr, state) => {
+            state.addAngle(mgr.getVisibleObject(CENTRE_GOAL_FLAG).angle)
             state.command = {
                 n: 'turn',
                 v: mgr.getVisibleObject(CENTRE_GOAL_FLAG).angle
@@ -231,6 +247,7 @@ const GKDecisionTree = {
     // 18
     turn45: {
         exec: (mgr, state) => {
+            state.addAngle(20)
             state.command = {
                 n: 'turn',
                 v: 20
@@ -248,7 +265,7 @@ const GKDecisionTree = {
 
             const fc = mgr.getVisibleObject('fc')
             console.log('IS_FLAGS_CORRECT', fpc, isFprCorrect, fc)
-            return Math.abs(fpc.angle - fc.angle) < 2
+            return Math.abs(fpc.angle - fc.angle) < 3
                 && isFprCorrect;
 
         },
@@ -259,6 +276,8 @@ const GKDecisionTree = {
     // 20
     turnToCentre: {
         exec: (mgr, state) => {
+            state.angleToTurnFromCenter = mgr.getVisibleObject('fc').angle
+            state.addAngle(mgr.getVisibleObject('fc').angle)
             state.command = {
                 n: 'turn',
                 v: mgr.getVisibleObject('fc').angle
@@ -279,6 +298,7 @@ const GKDecisionTree = {
     // 22
     turnToBall: {
         exec: (mgr, state) => {
+            state.addAngle(mgr.getVisibleBall().angle)
             state.command = {
                 n: 'turn',
                 v: mgr.getVisibleBall().angle
@@ -315,9 +335,9 @@ const GKDecisionTree = {
 
     //26
     doGoToBall: {
-        condition: (mgr, state) => mgr.getVisibleBall().distance < 15,
-        trueCond: 'goToBall',
-        falseCond: 'doNothing'
+        condition: (mgr, state) => Math.abs(mgr.getVisibleBall().angle) <= 1,
+        trueCond: 'doNothing',
+        falseCond: 'stepToCatch'
     },
 
     // 27
@@ -334,7 +354,16 @@ const GKDecisionTree = {
             }
         },
         next: 'sendCommand'
+    },
 
+    // 28
+    isDistanceToCatch: {
+        condition: (mgr, state) => {
+            const ball = mgr.getVisibleBall()
+            return ball.distance < 10
+        },
+        trueCond: 'shouldKick',
+        falseCond: 'isAngleToBallBig'
     },
 
     sendCommand: {

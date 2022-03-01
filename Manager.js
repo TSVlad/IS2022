@@ -16,7 +16,6 @@ class Manager {
         let currentVertex = this.dt.root
         console.log("BALL_DIST", !!this.getVisibleBall() ? this.getVisibleBall() : "i doesn't see" )
         while (!!currentVertex.next || currentVertex.trueCond) {
-
             if (currentVertex.exec) {
                 currentVertex.exec(this, this.dt.state)
                 console.log(currentVertex.next)
