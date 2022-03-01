@@ -32,11 +32,7 @@ class Agent {
     sendCmd() {
         if (this.active) {
             if (this.act) {
-                if (this.act.n === 'kick') {
-                    this.socketSend(this.act.n, `${this.act.v} ${this.act.a}`)
-                } else {
-                    this.socketSend(this.act.n, this.act.v)
-                }
+                    this.socketSend(this.act.n, `${this.act.v}${this.act.a ? ' ' + this.act.a : ''}`)
             }
             this.act = null
         }

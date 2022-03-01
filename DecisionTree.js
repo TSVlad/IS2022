@@ -209,7 +209,7 @@ const DecisionTree = {
             const objDistance = mgr.getVisibleObject(state.action.objName).distance
             state.command = {
                 n: 'dash',
-                v: /*bjDistance < TARGET_DIST ? 50 : 100*/ 40
+                v: /*bjDistance < TARGET_DIST ? 50 : 100*/ 40,
             }
         },
         next: "sendCommand"

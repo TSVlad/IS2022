@@ -43,7 +43,7 @@ const GKDecisionTree = {
             return !!ball && ball.distance > 20
         },
         trueCond: 'isFlagGoalVisible',
-        falseCond: 'isAngleToBallBig'
+        falseCond: 'isDistanceToCatch'
     },
 
     // 3
@@ -57,7 +57,7 @@ const GKDecisionTree = {
             const playersCloseToBall = mgr.controller.visibleObjects.players.filter(player => getDistanceBetweenObjects(player, ball) < ball.distance)
             const result = playersCloseToBall.length === 0 && ball.distance >= state.lastDistanceToBall && pFlagVisible
 
-            console.log('%c3 SHOULD_KICK',"color:red")
+            console.log('SHOULD_KICK')
             console.log(result, ball)
             console.log(' players to ball', playersCloseToBall)
             console.log(' distance', ball.distance, state.lastDistanceToBall)
@@ -299,7 +299,7 @@ const GKDecisionTree = {
         condition: (mgr, state) => {
             const ball = mgr.getVisibleBall()
             console.log('IS_NEED_TO_CATCH', ball)
-            return ball.distance <= 2
+            return ball.distance <= 3
         },
         trueCond: 'catchBall',
         falseCond: 'doGoToBall'
@@ -321,11 +321,16 @@ const GKDecisionTree = {
     },
 
     // 27
-    goToBall: {
+    stepToCatch: {
         exec: (mgr, state) => {
             state.command = {
                 n: 'dash',
-                v: 200
+                v: 200,
+                a: (90 - state.angleToTurnFromCenter)
+            }
+
+            if (mgr.getVisibleBall().angle < 0) {
+                state.command.a = (180 - state.command.a) * -1
             }
         },
         next: 'sendCommand'
