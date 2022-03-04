@@ -370,7 +370,7 @@ const DecisionTree = {
     isDistanceSmall: {
         condition: (mgr, state) => {
             const currentLeader = mgr.getPlayer(state.leader)
-            return currentLeader.distance < 5
+            return currentLeader.distance < 7
         },
         trueCond: 'turnToLeader',
         falseCond: 'isDistanceBig'

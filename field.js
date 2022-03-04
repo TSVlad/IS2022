@@ -257,9 +257,18 @@ const checkYLine = (flags) => {
     }
 }
 
+const findCrossWithGoal = (x1, y1, x2, y2) => {
+
+    const A = y1 - y2
+    const B = x2 - x1
+    const C = x1*y2 - x2*y1
+
+    return (-C - 52.5 * A) / B
+}
+
 const getAgentCoordinates = (objects) => {
-    if (objects.flags.keys().length >= 3) {
-        if (!checkXLine(objects.flags) || !checkYLine(objects.flags.values())) {
+    if (Object.keys(objects.flags).length >= 3) {
+        if (!checkXLine(Object.values(objects.flags)) || !checkYLine(Object.values(objects.flags))) {
             return null
         }
         return getCoordinatesBy3Points(Object.values(objects.flags).sort((f1, f2) => f1.distance - f2.distance))

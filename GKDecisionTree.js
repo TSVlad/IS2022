@@ -5,6 +5,8 @@ const FPC = 'fprc'
 const FPT = 'fprt'
 const FPB = 'fprb'
 const ENEMY_GOAL = 'gl'
+const PENALTY_AREA_X = 28
+const PENALTY_AREA_Y = 20
 
 const GKDecisionTree = {
 
@@ -85,10 +87,10 @@ const GKDecisionTree = {
                 && (ballCoordinates.x >= PENALTY_AREA_X && Math.abs(ballCoordinates.y) <= PENALTY_AREA_Y)
 
             console.log('SHOULD_KICK')
-            console.log(result, ball)
-            console.log(' players to ball', playersCloseToBall)
-            console.log(' distance', ball.distance, state.lastDistanceToBall)
-            console.log('   flags', pFlagVisible)
+            console.log('   ', result, ball)
+            console.log('   players to ball', playersCloseToBall)
+            console.log('   distance', ball.distance, state.lastDistanceToBall)
+            console.log('   penalty area', ballCoordinates.x, ballCoordinates.y)
             return result
         },
         trueCond: 'isBallClose',
@@ -254,6 +256,8 @@ const GKDecisionTree = {
         condition: (mgr, state) => {
             const fpc = mgr.getVisibleObject(FPC)
             const centre = mgr.getVisibleObject('fc')
+
+            console.log("17 IS_FLAG_VISIBLE", fpc, centre)
             return !!fpc && !!centre
         },
         trueCond: 'isFPRDistanceCorrect',
@@ -278,7 +282,7 @@ const GKDecisionTree = {
     isFPRDistanceCorrect: {
         condition: (mgr, state) => {
             const fpc = mgr.getVisibleObject(FPC)
-            const isFprCorrect = 15 <= fpc.distance && fpc.distance <= 20
+            const isFprCorrect = 15 <= fpc.distance && fpc.distance <= 18
 
             const fc = mgr.getVisibleObject('fc')
             console.log('IS_FLAGS_CORRECT', fpc, isFprCorrect, fc)
@@ -336,7 +340,7 @@ const GKDecisionTree = {
         condition: (mgr, state) => {
             const ball = mgr.getVisibleBall()
             console.log('IS_NEED_TO_CATCH', ball)
-            return ball.distance <= 3
+            return ball.distance <= 2
         },
         trueCond: 'catchBall',
         falseCond: 'doGoToBall'
