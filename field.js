@@ -262,7 +262,7 @@ const getAgentCoordinates = (objects) => {
         if (!checkXLine(objects.flags) || !checkYLine(objects.flags.values())) {
             return null
         }
-        return getCoordinatesBy3Points(objects.flags.values().sort((f1, f2) => f1.distance - f2.distance))
+        return getCoordinatesBy3Points(Object.values(objects.flags).sort((f1, f2) => f1.distance - f2.distance))
     } else {
         return null;
     }
@@ -271,5 +271,5 @@ const getAgentCoordinates = (objects) => {
 const getDistanceBetweenObjects = (obj1, obj2) => Math.sqrt(obj1.distance**2 + obj2.distance**2 - 2 * obj1.distance * obj2.distance * Math.cos(degToRad(Math.abs(obj1.angle - obj2.angle))))
 
 module.exports = {
-    Flags, getAgentCoordinates, getObjectCoordinates, checkYLine, checkXLine, getDistanceBetweenObjects
+    Flags, getAgentCoordinates, getObjectCoordinates, checkYLine, checkXLine, getDistanceBetweenObjects, findCrossWithGoal
 }

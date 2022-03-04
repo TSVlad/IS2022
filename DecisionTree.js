@@ -164,7 +164,7 @@ const DecisionTree = {
         exec: (mgr, state) => {
             state.command = {
                 n: 'kick',
-                v: 100,
+                v: 70,
                 a: mgr.getVisibleObject(state.action.goal).angle
             }
         },

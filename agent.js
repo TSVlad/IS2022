@@ -32,7 +32,7 @@ class Agent {
     sendCmd() {
         if (this.active) {
             if (this.act) {
-                    this.socketSend(this.act.n, `${this.act.v}${this.act.a ? ' ' + this.act.a : ''}`)
+                    this.socketSend(this.act.n, `${this.act.v}${!isNaN(this.act.a)? ' ' + this.act.a : ''}`)
             }
             this.act = null
         }

@@ -1,4 +1,4 @@
-const {getDistanceBetweenObjects} = require("./field");
+const {getDistanceBetweenObjects, getObjectCoordinates, findCrossWithGoal} = require("./field");
 
 const CENTRE_GOAL_FLAG = 'gr'
 const FPC = 'fprc'
@@ -10,7 +10,8 @@ const GKDecisionTree = {
 
     state: {
         lastDistanceToBall: null,
-        lastAction: null,
+        prevAction: null,
+        action: null,
         angleToTurnFromCenter: null,
 
         addAngle: angle => {
@@ -27,10 +28,17 @@ const GKDecisionTree = {
 
     root: {
         exec: (mgr, state) => {
+            state.prevAction = state.action
+            state.action = null
+            state.prevCommand = state.command
             state.command = null
             if (state.currentDitanceToBall) {
                 state.lastDistanceToBall = state.currentDitanceToBall
             }
+            if (state.ballCoordinates) {
+                state.prevBallCoordinates = state.ballCoordinates
+            }
+            state.ballCoordinates = null
         },
         next: 'isBallVisible'
     },
@@ -41,6 +49,11 @@ const GKDecisionTree = {
             const ball = mgr.getVisibleBall()
             if (ball) {
                 state.currentDitanceToBall = ball.distance
+                console.log('CONDITION', Object.keys(mgr.controller.visibleObjects.flags).length, mgr.controller.coordinates)
+                if (Object.keys(mgr.controller.visibleObjects.flags).length >= 2 && mgr.controller.coordinates) {
+                    state.ballCoordinates = getObjectCoordinates(mgr.controller.coordinates, Object.values(mgr.controller.visibleObjects.flags), ball)
+                    console.log('BALL COORDINATES', state.ballCoordinates)
+                }
             }
             return ball
         },
@@ -62,12 +75,14 @@ const GKDecisionTree = {
     shouldKick: {
         condition: (mgr, state) => {
             const ball = mgr.getVisibleBall()
-            const fpc = mgr.getVisibleObject(FPC)
-            const fpt = mgr.getVisibleObject(FPT)
-            const fpb = mgr.getVisibleObject(FPB)
-            const pFlagVisible = fpc || fpt || fpb
+            if (!mgr.controller.coordinates) {
+                return false
+            }
+            const ballCoordinates = getObjectCoordinates(mgr.controller.coordinates, Object.values(mgr.controller.visibleObjects.flags), ball)
             const playersCloseToBall = mgr.controller.visibleObjects.players.filter(player => getDistanceBetweenObjects(player, ball) < ball.distance)
-            const result = playersCloseToBall.length === 0 && ball.distance >= state.lastDistanceToBall && !!pFlagVisible
+            const result = playersCloseToBall.length === 0
+                && (ball.distance >= state.lastDistanceToBall || state.prevAction === 'KICK')
+                && (ballCoordinates.x >= PENALTY_AREA_X && Math.abs(ballCoordinates.y) <= PENALTY_AREA_Y)
 
             console.log('SHOULD_KICK')
             console.log(result, ball)
@@ -83,6 +98,7 @@ const GKDecisionTree = {
     // 4
     catchBall: {
         exec: (mgr, state) => {
+            state.action = 'CATCH'
             state.command = {
                 n: 'catch',
                 v: mgr.getVisibleBall().angle
@@ -94,6 +110,7 @@ const GKDecisionTree = {
     // 5
     isBallClose: {
         condition: (mgr, state) => {
+            state.action = 'KICK'
             const ball = mgr.getVisibleBall()
             console.log("IS_BALL_CLOSE", ball)
             return ball.distance <= 0.5
@@ -335,7 +352,19 @@ const GKDecisionTree = {
 
     //26
     doGoToBall: {
-        condition: (mgr, state) => Math.abs(mgr.getVisibleBall().angle) <= 1,
+        condition: (mgr, state) => {
+            if (!state.ballCoordinates || !state.prevBallCoordinates) {
+                return true
+            }
+            const yCross = findCrossWithGoal(
+                state.ballCoordinates.x,
+                state.ballCoordinates.y,
+                state.prevBallCoordinates.x,
+                state.prevBallCoordinates.y
+            )
+            return Math.abs(yCross - mgr.controller.coordinates.y) < 0.3;
+
+        },
         trueCond: 'doNothing',
         falseCond: 'stepToCatch'
     },
@@ -345,12 +374,22 @@ const GKDecisionTree = {
         exec: (mgr, state) => {
             state.command = {
                 n: 'dash',
-                v: 200,
+                v: 150,
                 a: (90 - state.angleToTurnFromCenter)
             }
+            var yCross = findCrossWithGoal(
+                state.ballCoordinates.x,
+                state.ballCoordinates.y,
+                state.prevBallCoordinates.x,
+                state.prevBallCoordinates.y
+            )
 
-            if (mgr.getVisibleBall().angle < 0) {
+            console.log("STEP_TO_CATCH",state.ballCoordinates, state.prevBallCoordinates, yCross, mgr.controller.coordinates)
+            if (yCross > mgr.controller.coordinates.y) {
                 state.command.a = (180 - state.command.a) * -1
+                console.log('STEP LEFT')
+            } else {
+                console.log('STEP RIGHT')
             }
         },
         next: 'sendCommand'
@@ -365,6 +404,7 @@ const GKDecisionTree = {
         trueCond: 'shouldKick',
         falseCond: 'isAngleToBallBig'
     },
+
 
     sendCommand: {
         exec: (mgr, state) => {
