@@ -1,15 +1,19 @@
-const DecisionTree = require("./DecisionTree");
-const {getObjectCoordinates, getDistanceBetweenObjects} = require("./field");
-const GKDecisionTree = require("./GKDecisionTree");
+const {getDistanceBetweenObjects} = require("./field");
+const PassDT = require("./PassDT");
+const KickDT = require("./KickDT");
 
 class Manager {
 
     constructor() {
-        this.dt = process.env.GK ? GKDecisionTree : DecisionTree
+        this.dt = process.env.ROLE === 'PASS' ? PassDT : KickDT
     }
 
     setController(controller) {
         this.controller = controller
+    }
+
+    initActions() {
+        this.dt.initActions(this.dt.state)
     }
 
     doActions() {

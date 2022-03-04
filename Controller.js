@@ -8,15 +8,12 @@ class Controller {
 
     constructor() {
         this.mgr = new Manager()
+        this.mgr.initActions()
         this.mgr.setController(this)
     }
 
     processMsg(msg) {
         let data = Msg.parseMsg(msg)
-
-        // if (this.agent.active) {
-        //     console.log(msg)
-        // }
 
         if (!data) {
             throw new Error("Parse error\n" + msg)
@@ -52,105 +49,27 @@ class Controller {
         }
     }
 
-    /*doCurrentAction() {
-        if (this.actions.length > 0) {
-            switch (this.actions[0].act) {
-                case 'go_to_object':
-                    this.goToObject()
-                    break
-                case 'kick':
-                    this.kick()
-                    break
-            }
-        }
-    }
-
-    goToObject() {
-        const obj = this.getObjectFromVisible(this.actions[0].objName)
-
-        if (obj) {
-            if (Math.abs(obj.angle) > 1) {
-                this.agent.act = {
-                    n: 'turn',
-                    v: obj.angle
-                }
-            } else {
-                if (obj.distance < this.actions[0].targetDist) {
-                    this.finishAction()
-                    return
-                }
-                this.agent.act = {
-                    n: 'dash',
-                    v: obj.distance < this.actions[0].targetDist + 2 ? 50 : 100
-                }
-            }
-        } else {
-            this.agent.act = {
-                n: 'turn',
-                v: 45
-            }
-        }
-    }
-
-    kick() {
-        const objToKick = this.getObjectFromVisible(this.actions[0].objName)
-        const directionToKick = this.getObjectFromVisible(this.actions[0].goal)
-
-        if (!objToKick || objToKick.distance >= 0.5) {
-            console.log('RUN TO BALL')
-            this.actions.unshift({
-                act: 'go_to_object',
-                objName: 'b',
-                targetDist: 0.5
-            })
-        } else if (!directionToKick) {
-            this.agent.act = {
-                n: 'kick',
-                v: 5,
-                a: 45
-            }
-        } else {
-            console.log('KICK BALL')
-            this.agent.act = {
-                n: 'kick',
-                v: 100,
-                a: directionToKick.angle
-            }
-        }
-    }
-
-
-
-    finishAction() {
-        this.actions.shift()
-        this.doCurrentAction()
-    }*/
-
-    /*getObjectFromVisible(objName) {
-        switch (objName.charAt(0)){
-            case 'f':
-            case 'g':
-                return this.agent.visibleObjects.flags[objName]
-            case 'p':
-                //TODO: add logic
-                break
-            case 'b':
-                return this.agent.visibleObjects.ball
-            default:
-                console.log('getObjectFromVisible: Undefined object')
-
-        }
-    }*/
 
     handleHear(data) {
         console.log('HEAR', data.p[2])
         if (data.p[2] === 'play_on') {
-            this.agent.active = true
+            if (process.env.ROLE !== 'STATIST') {
+                this.agent.active = true
+            }
+        } else if (data.p[3] === '\"go\"') {
+            this.agent.ready = true
         } else if (data.p[2].startsWith('goalie_catch_ball_r')) {
             // this.ballInHands = true
         } else if (data.p[2].startsWith('goal')) {
+            this.mgr.initActions()
             this.agent.active = false
-            // TODO action on a goal
+            if (process.env.ROLE === 'PASS') {
+                this.agent.sendCmd({n: 'move', v: '-20 -5'})
+            } else if (process.env.ROLE === 'KICK') {
+                this.agent.sendCmd({n: 'move', v: '-20 5'})
+            }
+        } else if (data.p[2] === 'half_time') {
+            this.mgr.initActions()
         }
 
     }
