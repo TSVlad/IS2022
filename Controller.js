@@ -56,18 +56,21 @@ class Controller {
             if (process.env.ROLE !== 'STATIST') {
                 this.agent.active = true
             }
-        } else if (data.p[3] === '\"go\"') {
+        } else if (data.p[2] === '\"go\"') {
             this.agent.ready = true
         } else if (data.p[2].startsWith('goalie_catch_ball_r')) {
             // this.ballInHands = true
         } else if (data.p[2].startsWith('goal')) {
+            this.agent.ready = false
             this.mgr.initActions()
-            this.agent.active = false
             if (process.env.ROLE === 'PASS') {
-                this.agent.sendCmd({n: 'move', v: '-20 -5'})
+                this.agent.act = {n: 'move', v: '-20 -5'}
+                this.agent.sendCmd()
             } else if (process.env.ROLE === 'KICK') {
-                this.agent.sendCmd({n: 'move', v: '-20 5'})
+                this.agent.act = {n: 'move', v: '-20 5'}
+                this.agent.sendCmd()
             }
+            this.agent.active = false
         } else if (data.p[2] === 'half_time') {
             this.mgr.initActions()
         }

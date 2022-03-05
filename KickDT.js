@@ -46,7 +46,7 @@ const KickDT = {
 
     // 4
     isDistanceToKick: {
-        condition: (mgr, state) => mgr.getVisibleObject(state.action.objName).distance < 0.5,
+        condition: (mgr, state) => mgr.getVisibleObject(state.action.objName).distance < 3,
 
         trueCond:'finishAction',
         falseCond:'stepForward'
