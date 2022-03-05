@@ -52,6 +52,7 @@ class Controller {
 
     handleHear(data) {
         console.log('HEAR', data.p[2])
+        console.log(data.msg)
         if (data.p[2] === 'play_on') {
             if (process.env.ROLE !== 'STATIST') {
                 this.agent.active = true
