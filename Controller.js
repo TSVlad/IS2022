@@ -2,14 +2,13 @@ const Msg = require("./msg");
 const {parseVisibleData} = require("./msg");
 const {getAgentCoordinates, getObjectCoordinates} = require("./field");
 const Manager = require("./Manager");
+const TaManager = require("./lab5/TaManager");
 
 class Controller {
 
 
     constructor() {
-        this.mgr = new Manager()
-        this.mgr.initActions()
-        this.mgr.setController(this)
+        this.mgr = new TaManager()
     }
 
     processMsg(msg) {
@@ -41,11 +40,12 @@ class Controller {
 
     handleSee(data) {
         if (this.agent.active) {
-
-            this.visibleObjects = parseVisibleData(data)
-            this.coordinates = getAgentCoordinates(this.visibleObjects)
-
-            this.mgr.doActions()
+            const visibleObjects = parseVisibleData(data)
+            const coordinates = getAgentCoordinates(visibleObjects)
+            console.log('handleSee', coordinates)
+            this.mgr.addInfo({...visibleObjects, coordinates})
+            this.agent.act = this.mgr.getCommand()
+            this.agent.sendCmd()
         }
     }
 
@@ -63,7 +63,7 @@ class Controller {
             // this.ballInHands = true
         } else if (data.p[2].startsWith('goal')) {
             this.agent.ready = false
-            this.mgr.initActions()
+            this.mgr.initTA()
             if (process.env.ROLE === 'PASS') {
                 this.agent.act = {n: 'move', v: '-20 -5'}
                 this.agent.sendCmd()
@@ -73,7 +73,7 @@ class Controller {
             }
             this.agent.active = false
         } else if (data.p[2] === 'half_time') {
-            this.mgr.initActions()
+            this.mgr.initTA()
         }
 
     }
