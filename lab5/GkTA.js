@@ -56,7 +56,7 @@ const GkTA = {
         // 3
         ballVisible: {
             n: "ballVisible",
-            e: ['ballVisible_turnToBall', 'ballVisible_needStayAtGoal', 'ballVisible_readyToAction']
+            e: ['undefinedBallCoordinates', 'ballVisible_turnToBall', 'ballVisible_needStayAtGoal', 'ballVisible_readyToAction']
         },
         // 4
         turnToBall: {
@@ -133,10 +133,13 @@ const GkTA = {
         catchBall: {
             n: "catchBall", e: [],
             getCommand: (state) => {
+                console.log('CATCH_BALL', state.envInfo.ball.angle)
+
+                const angle = Math.abs(state.envInfo.ball.angle) <= 5 ? state.envInfo.ball.angle : state.envInfo.ball.angle < 0 ? -30 : 30
                 return {
                     n: 'catch',
-                    // v: state.envInfo.ball.angle
-                    v: 0
+                    v: angle
+                    // v: 0
                 }
             }
         },
@@ -219,11 +222,11 @@ const GkTA = {
         },
         // 19
         needGoToBallAndStepToBall: {
-            n: "needGoToBallAndStepToBall", e: ['needGoToBallAndStepToBall_exitToKick'],
+            n: "needGoToBallAndStepToBall", e: [],
             getCommand: (state) => {
                 return {
                     n: 'dash',
-                    v: 50,
+                    v: 100,
                     a: state.envInfo.ball.angle
                 }
             }
@@ -354,7 +357,8 @@ const GkTA = {
         ballVisible_readyToAction: {
             destination: 'readyToAction',
             condition: (state) => {
-                return state.envInfo.ball.distance < 20
+                const ballCoordinates = state.envInfo.coordinates ? getObjectCoordinates(state.envInfo.coordinates, Object.values(state.envInfo.flags), state.envInfo.ball) : null
+                return ballCoordinates.x >= PENALTY_AREA_X && Math.abs(ballCoordinates.y) <= PENALTY_AREA_Y
             }
         },
         // 6
@@ -515,7 +519,7 @@ const GkTA = {
                 if (!state.envInfo.ball) {
                     return false
                 }
-                return Math.abs(state.envInfo.ball.angle) <= 1
+                return Math.abs(state.envInfo.ball.angle) <= 20
             }
         },
         // 23
@@ -654,6 +658,13 @@ const GkTA = {
             destination: 'needStayAtGoal',
             condition: (state) => {
                 return true
+            }
+        },
+        // 41
+        undefinedBallCoordinates:{
+            destination: 'exitToKick',
+            condition: (state) => {
+                return !state.envInfo.coordinates || !getObjectCoordinates(state.envInfo.coordinates, Object.values(state.envInfo.flags), state.envInfo.ball)
             }
         },
     }
