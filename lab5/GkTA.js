@@ -325,7 +325,16 @@ const GkTA = {
         ballVisible_turnToBall: {
             destination: 'turnToBall',
             condition: (state) => {
-                return state.envInfo.ball.distance >= 20 && state.envInfo.ball.distance <= 30
+                const ball = state.envInfo.ball
+                const ballCoordinates = state.envInfo.coordinates ? getObjectCoordinates(state.envInfo.coordinates, Object.values(state.envInfo.flags), ball) : null
+
+                if (!ballCoordinates) {
+                    return false
+                }
+
+                const dist = Math.sqrt(Math.pow(ballCoordinates.x - 52.5, 2) + Math.pow(ballCoordinates.y, 2))
+
+                return dist <= 30 && (ballCoordinates.x < PENALTY_AREA_X || Math.abs(ballCoordinates.y) > 20)
             }
         },
         //4
