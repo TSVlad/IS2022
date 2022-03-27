@@ -18,7 +18,7 @@ class Agent {
     msgGot(msg) {
         let data = msg.toString('utf8')
         this.controller.processMsg(data)
-        this.sendCmd()
+        // this.sendCmd()
     }
 
     setSocket(socket) {

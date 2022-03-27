@@ -47,7 +47,9 @@ module.exports = {
     },
 
     parseVisibleData(data) {
+        console.log(data.p[0])
         const result = {
+            time: data.p[0],
             flags: [],
             players: [],
             ball: null

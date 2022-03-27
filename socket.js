@@ -9,6 +9,7 @@ module.exports = function (agent, teamName, version) {
         agent.msgGot(msg)
     })
     socket.sendMsg = function (msg) {
+        console.log("SOCKET SEND ", msg)
         socket.send(Buffer.from(msg), 6000, 'localhost', (err, bytes) => {
             if (err) {
                 throw err

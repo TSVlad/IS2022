@@ -1,14 +1,20 @@
 const Msg = require("./msg");
 const {parseVisibleData} = require("./msg");
 const {getAgentCoordinates, getObjectCoordinates} = require("./field");
-const Manager = require("./Manager");
-const TaManager = require("./lab5/TaManager");
+const MainController = require("./lab6/controllers/MainController");
 
 class Controller {
 
 
     constructor() {
-        this.mgr = new TaManager()
+        this.subController = new MainController()
+        this.envHistory = []
+        this.hearedEvents = {
+            pass: {
+                time: -1,
+                angle: 0
+            }
+        }
     }
 
     processMsg(msg) {
@@ -42,16 +48,34 @@ class Controller {
         if (this.agent.active) {
             const visibleObjects = parseVisibleData(data)
             const coordinates = getAgentCoordinates(visibleObjects)
-            console.log('handleSee', coordinates)
-            this.mgr.addInfo({...visibleObjects, coordinates})
-            this.agent.act = this.mgr.getCommand()
+            if (coordinates) {
+                const flags = Object.values(visibleObjects.flags)
+                for (const player of visibleObjects.players) {
+                    player.coordinates = getObjectCoordinates(coordinates, flags, player)
+                }
+                if (visibleObjects.ball) {
+                    visibleObjects.ball.coordinates = getObjectCoordinates(coordinates, flags, visibleObjects.ball)
+                }
+            }
+
+            const env = {...visibleObjects, coordinates, side: this.agent.position, number: this.agent.id}
+            this.agent.act = this.subController.getCommand(env, this.envHistory, this.hearedEvents)
             this.agent.sendCmd()
+            this.addToHistory(env)
         }
+    }
+
+    addToHistory(env) {
+        if (this.envHistory.length >= 10) {
+            this.envHistory.pop()
+        }
+        this.envHistory.unshift(env)
     }
 
 
     handleHear(data) {
-        console.log('HEAR', data.p[2])
+        console.log(this.agent.id)
+        console.log('HEAR', data)
         console.log(data.msg)
         if (data.p[2] === 'play_on') {
             if (process.env.ROLE !== 'STATIST') {
@@ -63,17 +87,14 @@ class Controller {
             // this.ballInHands = true
         } else if (data.p[2].startsWith('goal')) {
             this.agent.ready = false
-            this.mgr.initTA()
-            if (process.env.ROLE === 'PASS') {
-                this.agent.act = {n: 'move', v: '-20 -5'}
-                this.agent.sendCmd()
-            } else if (process.env.ROLE === 'KICK') {
-                this.agent.act = {n: 'move', v: '-20 5'}
-                this.agent.sendCmd()
-            }
             this.agent.active = false
         } else if (data.p[2] === 'half_time') {
-            this.mgr.initTA()
+            
+        } else if (data.p[2] === '\"pass' && data.p[3] === process.env.TEAM && data.p[4] === this.agent.id) {
+            this.hearedEvents.pass = {
+                time: data.p[0],
+                angle: data.p[1]
+            }
         }
 
     }
