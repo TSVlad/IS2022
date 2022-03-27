@@ -23,6 +23,7 @@ class Controller {
         if (!data) {
             throw new Error("Parse error\n" + msg)
         }
+
         switch (data.cmd) {
             case 'hear':
                 this.handleHear(data)
