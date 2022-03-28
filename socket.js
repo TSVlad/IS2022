@@ -16,4 +16,5 @@ module.exports = function (agent, teamName, version) {
         })
     }
     socket.sendMsg(`(init ${teamName} (version ${version}) ${process.env.GK ? '(goalie)' : ''})`)
+    console.log(process.env.GK)
 }

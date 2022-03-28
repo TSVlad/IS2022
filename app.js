@@ -6,8 +6,12 @@ let agent = new Agent(teamName)
 
 require('./socket')(agent, teamName, VERSION)
 
-rl.question('x: ', x => {
-    rl.question('y: ', y => {
-        agent.socketSend('move', `${x} ${y}`)
-    })
-})
+// rl.question('x: ', x => {
+//     rl.question('y: ', y => {
+//         agent.socketSend('move', `${x} ${y}`)
+//     })
+// })
+
+setTimeout(() => {
+    agent.socketSend('move', `${process.env.X} ${process.env.Y}`)
+}, 2500)

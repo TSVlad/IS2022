@@ -5,7 +5,7 @@ const DIST_TO_KICK = 0.5
 // 7 8 смотрит на мяч
 const ANGLE_TO_KICK = 1
 // 12 13 расстояние до ворот
-const DIST_TO_GOAL = 15
+const DIST_TO_GOAL = 16
 const HISTORY_SIZE = 5
 
 const ShooterTA = {
@@ -83,7 +83,7 @@ const ShooterTA = {
             n: "runToGoalWithBall", e: [], getCommand: (state) => {
                 return {
                     n: 'kick',
-                    v: 25,
+                    v: 30,
                     a: state.envInfo.flags['gr'].angle
                 }
             }
