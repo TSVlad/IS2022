@@ -1,6 +1,7 @@
 const TreesRepository = {
     teammatesSortedByX: [],
     enemiesSortedByX: [],
+    teammates: [],
     currentAngle: 0,
 
     addAngle: angle => {

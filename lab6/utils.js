@@ -19,4 +19,8 @@ const getCommandFromTree = (tree, env, envHistory, hearedEvents) => {
     return currentNode.exec(env, envHistory, hearedEvents)
 }
 
-module.exports = getCommandFromTree
+const getRandomInt = (max) => {
+    return Math.floor(Math.random() * max);
+}
+
+module.exports = {getCommandFromTree, getRandomInt}
