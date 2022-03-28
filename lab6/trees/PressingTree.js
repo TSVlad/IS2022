@@ -42,21 +42,26 @@ const PressingTree = {
 
     // 3
     isAngleToBall0: {
-        condition: (env, envHistory, hearedEvents) => Math.abs(env.ball.angle) <= 1,
-        trueCond: 'isDDistanceToKick',
+        condition: (env, envHistory, hearedEvents) => Math.abs(env.ball.angle) <= 20,
+        trueCond: 'isDistanceToKick',
         falseCond: 'turnToBall'
     },
 
     // 4
     turnToBall: {
-        exec: (env, envHistory, hearedEvents) => {}
+        exec: (env, envHistory, hearedEvents) => {
+            return {
+                n: 'turn',
+                v: env.ball.angle
+            }
+        }
     },
 
     // 5
     isDDistanceToKick: {
-        condition: (env, envHistory, hearedEvents) => true,
-        trueCond: '',
-        falseCond: ''
+        condition: (env, envHistory, hearedEvents) => env.ball.distance <= 0.5,
+        trueCond: 'isTeammateVisible',
+        falseCond: 'stepToBall'
     },
 
     // 6
@@ -73,22 +78,26 @@ const PressingTree = {
     // 7
     strongKickToGoal: {
         exec: (env, envHistory, hearedEvents) => {
-            // const goal = env.flags[env.side === 'l' ?'gr' : 'gl']
-            //
-            // if (!!goal){
-            //     return {
-            //         n: 'kick'
-            //
-            //     }
-            // }
+            const goal = env.flags[env.side === 'l' ?'gr' : 'gl']
+
+            if (!!goal){
+                return {
+                    n: 'kick',
+                    v: 100,
+                    a: goal.angle
+                }
+            }
         }
     },
 
     // 8
     isTeammateVisible: {
-        condition: (env, envHistory, hearedEvents) => true,
-        trueCond: '',
-        falseCond: ''
+        condition: (env, envHistory, hearedEvents) => {
+            TreesRepository.teammates = env.players.filter(player => player.team === process.env.TEAM)
+            return !!TreesRepository.teammates
+        },
+        trueCond: 'kickToTeammate',
+        falseCond: 'isEnemyGoalVisible'
 
     },
 
@@ -106,9 +115,9 @@ const PressingTree = {
 
     // 10
     isEnemyGoalVisible: {
-    condition: (env, envHistory, hearedEvents) => true,
-        trueCond: '',
-        falseCond: ''
+    condition: (env, envHistory, hearedEvents) => !!env.flags[env.side === 'l' ?'gr' : 'gl'],
+        trueCond: 'strongKickToGoal',
+        falseCond: 'isMyGoalVisible'
     },
 
     // 11
