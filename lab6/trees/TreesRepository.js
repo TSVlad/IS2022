@@ -3,7 +3,8 @@ const TreesRepository = {
     enemiesSortedByX: [],
     teammates: [],
     currentAngle: 0,
-
+    angleToPosition: 0,
+    enemiesInGoals: [],
     addAngle: angle => {
         const newAngle = this.currentAngle + angle
         if (newAngle > 180){
