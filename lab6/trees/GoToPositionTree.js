@@ -60,7 +60,44 @@ const GoToPositionTree = {
     // 3
     startDotWith0: {
         condition: (env, envHistory, hearedEvents) => {
-            return true
+            const point = getStartPosition(env.side)
+            const lastCoordinates = getLastCoordinates()
+            const alpha = getAlpha(point, lastCoordinates)
+            const gamma = env.side === 'l' ? 90 : -90
+
+
+            if (!lastCoordinates) {
+                return true
+            }
+
+            if (point.x > lastCoordinates.x) {
+                if (point.y > lastCoordinates.y) {
+                    TreesRepository.angleToPosition = getAngleToTurn(gamma - alpha - TreesRepository.currentAngle)
+                } else if (point.y < lastCoordinates.y) {
+                    TreesRepository.angleToPosition = getAngleToTurn(-gamma + alpha - TreesRepository.currentAngle)
+                } else {
+                    const angle = env.side === 'l' ? -TreesRepository.currentAngle : 180 - TreesRepository.currentAngle
+                    TreesRepository.angleToPosition = getAngleToTurn(angle)
+                }
+            } else if (point.x < lastCoordinates.x) {
+                if (point.y > lastCoordinates.y) {
+                    TreesRepository.angleToPosition = getAngleToTurn(gamma + alpha - TreesRepository.currentAngle)
+                } else if (point.y < lastCoordinates.y) {
+                    TreesRepository.angleToPosition = getAngleToTurn(-gamma - alpha - TreesRepository.currentAngle)
+                } else {
+                    const angle = env.side === 'l' ? 180 - TreesRepository.currentAngle : -TreesRepository.currentAngle
+                    TreesRepository.angleToPosition = getAngleToTurn(angle)
+                }
+            } else {
+                if (point.y > lastCoordinates.y) {
+                    const angle = env.side === 'l' ? 90 - TreesRepository.currentAngle : -90 - TreesRepository.currentAngle
+                    TreesRepository.angleToPosition = getAngleToTurn(angle)
+                } else if (point.y < lastCoordinates.y) {
+                    const angle = env.side === 'l' ? -90 - TreesRepository.currentAngle : 90 - TreesRepository.currentAngle
+                    TreesRepository.angleToPosition = getAngleToTurn(angle)
+                }
+            }
+            return Math.abs(TreesRepository.angleToPosition) <= 1
         },
         trueCond: 'stepForward',
         falseCond: 'turnToStartDot'
@@ -77,9 +114,44 @@ const GoToPositionTree = {
     },
 
     // 5
-    turnToStartDot: {exec: (env, envHistory, hearedEvents) => {
-            return
-        }}
+    turnToStartDot: {
+        exec: (env, envHistory, hearedEvents) => {
+            return {
+                n: 'turn',
+                v: TreesRepository.angleToPosition
+            }
+        }
+    },
+
+    // 6
+    onStartPosition: {
+        condition: (env, envHistory, hearedEvents) => {
+            const point = getStartPosition(env.side)
+            const lastCoordinates = getLastCoordinates()
+            return Math.sqrt((point.x - lastCoordinates.x) ** 2 + (point.y - lastCoordinates.y) ** 2) <= 1
+        },
+
+        trueCond: 'isBallVisible',
+        falseCond: 'startDotWith0'
+    },
+
+    // 7
+    isBallVisible: {
+        condition: (env, envHistory, hearedEvents) => !!env.ball,
+
+        trueCond: 'turnToBall',
+        falseCond: 'turn90'
+    },
+
+    // 8
+    turnToBall: {
+        exec: (env) => {
+            return {
+                n: 'turn',
+                v: env.ball.angle
+            }
+        }
+    }
 }
 
 module.exports = GoToPositionTree
