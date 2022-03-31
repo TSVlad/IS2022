@@ -21,6 +21,15 @@ class MainController {
             }
         }
 
+        if (!!TreesRepository.coordinatesPass) {
+            const coordinatesPass = {...TreesRepository.coordinatesPass}
+            TreesRepository.coordinatesPass = null
+            return {
+                n: 'say',
+                v: `\" pass ${process.env.TEAM} ${coordinatesPass.x} ${coordinatesPass.y} \"`
+            }
+        }
+
         if (envWithBall && this.isAttacking(envWithBall)){
             return this.atackController.getCommand(env, envHistory, hearedEvents)
         } else if (envWithBall) {

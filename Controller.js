@@ -2,6 +2,7 @@ const Msg = require("./msg");
 const {parseVisibleData} = require("./msg");
 const {getAgentCoordinates, getObjectCoordinates} = require("./field");
 const MainController = require("./lab6/controllers/MainController");
+const TreesRepository = require("./lab6/trees/TreesRepository");
 
 class Controller {
 

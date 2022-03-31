@@ -14,6 +14,10 @@ const getLastSeenBall = (env, envHistory) => {
     return null
 }
 
+const getDistance = (coords1, coords2) => {
+    return Math.sqrt((coords1.x - coords2.x) ** 2 + (coords1.y - coords2.y) ** 2)
+}
+
 class DefenceController {
     constructor() {
         this.pressingController = new PressingController()

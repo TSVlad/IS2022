@@ -1,5 +1,6 @@
 const BallControlController = require("./BallControlController");
 const WithoutBallController = require("./WithoutBallController");
+const TreesRepository = require("../trees/TreesRepository");
 
 class AttackController {
     constructor() {
@@ -9,7 +10,7 @@ class AttackController {
 
     getCommand(env, envHistory, hearedEvents){
 
-        if (!env.closestPlayer || env.closestPlayer.distanceToBall > env.ball.distance){
+        if (!TreesRepository.closestPlayerToBall || TreesRepository.closestPlayerToBall.distanceToBall > env.ball.distance){
             return this.ballControlController.getCommand(env, envHistory, hearedEvents)
         }
 
