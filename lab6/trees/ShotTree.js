@@ -11,7 +11,7 @@ const getRightF = (env) => {
 const ShotTree = {
     root: {
         exec:() => {},
-        next: ''
+        next: 'isGoalFree'
     },
 
     // 1

@@ -91,10 +91,14 @@ class Controller {
             this.agent.active = false
         } else if (data.p[2] === 'half_time') {
             
-        } else if (data.p[2] === '\"pass' && data.p[3] === process.env.TEAM && data.p[4] === this.agent.id) {
+        } else if (data.p[2] === 'pass' && data.p[3] === process.env.TEAM) {
             this.hearedEvents.pass = {
                 time: data.p[0],
-                angle: data.p[1]
+                angle: data.p[1],
+                coordinates: {
+                    x: parseFloat(data.p[4]),
+                    y: parseFloat(data.p[5])
+                }
             }
         }
 

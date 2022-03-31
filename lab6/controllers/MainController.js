@@ -1,6 +1,7 @@
 const AttackController = require("./AttackController");
 const DefenceController = require("./DefenceController");
 const {getDistanceBetweenObjects} = require("../../field");
+const TreesRepository = require("../trees/TreesRepository");
 
 class MainController {
     constructor() {
@@ -39,7 +40,7 @@ class MainController {
                 closestPlayer = player
             }
         }
-        env.closestPlayer = closestPlayer
+        TreesRepository.closestPlayerToBall = closestPlayer
         return !closestPlayer || closestPlayer.distanceToBall > env.ball.distance || closestPlayer.team === process.env.TEAM
     }
 }

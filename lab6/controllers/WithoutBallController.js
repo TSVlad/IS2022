@@ -2,6 +2,23 @@ const AcceptPassTree = require("../trees/AcceptPassTree");
 const HelpAttackTree = require("../trees/HelpAttackTree");
 const {getCommandFromTree} = require("../utils");
 
+const getLastSeenCoordinates = (env, envHistory) => {
+    if (env.coordinates) {
+        return env.coordinates
+    } else {
+        for (const e of envHistory) {
+            if (e.coordinates) {
+                return e.coordinates
+            }
+        }
+    }
+    return null
+}
+
+const getDistance = (coords1, coords2) => {
+    return Math.sqrt((coords1.x - coords2.x) ** 2 + (coords1.y - coords2.y) ** 2)
+}
+
 class WithoutBallController {
     constructor() {
         this.acceptPassTree = AcceptPassTree
@@ -10,7 +27,9 @@ class WithoutBallController {
 
     getCommand(env, envHistory, hearedEvents){
         let tree;
-        if (hearedEvents.pass.time >= 0 && env.time - hearedEvents.pass.time <= 10) {
+        const coordinates = getLastSeenCoordinates(env, envHistory)
+        if (hearedEvents.pass.time >= 0 && env.time - hearedEvents.pass.time <= 10 && coordinates
+            && getDistance(coordinates, hearedEvents.pass.coordinates < 2)) {
             tree = this.acceptPassTree
         } else {
             tree = this.helpAttackTree
