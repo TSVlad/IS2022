@@ -128,6 +128,63 @@ class Controller {
 
     }
 
+    getGamma(x1, y1, x2, y2) {
+        const a = Math.abs(x1 - x2)
+        const b = Math.abs(y1 - y2)
+        return Math.ceil((180 * Math.atan(a / b)) / Math.PI)
+    }
+
+    getCurrentAngle(coordinates, flag, side) {
+
+        const gamma = this.getGamma(flag.x, flag.y, coordinates.x, coordinates.y)
+        const alpha = flag.angle
+        const angle90 = side === 'l' ? 90 : -90
+        let beta = 0
+
+        if (coordinates.x > flag.x){
+            if (coordinates.y > flag.y){
+                beta = - angle90 - gamma - alpha
+            } else if (coordinates.y < flag.y) {
+                beta = angle90 + gamma - alpha
+            } else {
+                beta = side === 'l' ? 180 - alpha : -alpha
+            }
+
+        } else if (coordinates.x < flag.x) {
+
+            if (coordinates.y > flag.y){
+                beta = - angle90 + gamma - alpha
+            } else if (coordinates.y < flag.y) {
+                beta = angle90 - gamma - alpha
+            } else {
+                beta = side === 'l' ? -alpha : 180 - alpha
+            }
+
+        } else {
+            if (coordinates.y > flag.y){
+                beta = side === 'l' ? - 90  - alpha : 90 - alpha
+            } else if (coordinates.y < flag.y) {
+                beta = side === 'l' ? 90  - alpha : - 90 - alpha
+            } else {
+                console.log('WARN: SAME X AND Y IN GET CURRENT ANGLE')
+            }
+        }
+        console.log('CURENT BETA: ', beta)
+        return beta
+    }
+
+    getLastCoordinates(env, envHistory) {
+        if (env.coordinates) {
+            return env.coordinates
+        }
+        for (const e of envHistory) {
+            if (e.coordinates) {
+                return e.coordinates
+            }
+        }
+        return null
+    }
+
     setAgent(agent) {
         this.agent = agent
     }

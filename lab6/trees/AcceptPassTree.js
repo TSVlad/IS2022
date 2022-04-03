@@ -16,7 +16,7 @@ const AcceptPassTree = {
         exec: (env, envHistory, hearedEvents) => {
             return {
                 n: 'turn',
-                a: hearedEvents.angle
+                v: hearedEvents.pass.angle
             }
         }
     },
@@ -44,7 +44,7 @@ const AcceptPassTree = {
         exec: (env, envHistory, hearedEvents) => {
             return {
                 n: 'turn',
-                a: env.ball.angle
+                v: env.ball.angle
             }
         }
     }

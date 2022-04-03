@@ -16,7 +16,7 @@ const RunWithBallTree  = {
     // 2
     isBallClose: {
         condition: (env, envHistory, hearedEvents) =>
-            !!env.ball && env.ball.distance < 2,
+            !!env.ball && env.ball.distance < 0.5,
         trueCond: 'isGoalVisible',
         falseCond: 'stepToBall'
     },
@@ -33,7 +33,7 @@ const RunWithBallTree  = {
         exec: (env, envHistory, hearedEvents) => {
             return  {
                 n: 'turn',
-                v: env.ball.angle
+                v: !!env.ball ? env.ball.angle : 45
             }
         }
     },
@@ -43,7 +43,7 @@ const RunWithBallTree  = {
         exec: (env, envHistory, hearedEvents) => {
             return {
                 n: 'dash',
-                v: 200,
+                v: 75,
                 a: env.ball.angle
             }
         }

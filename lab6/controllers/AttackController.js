@@ -14,11 +14,24 @@ class AttackController {
 
         const histEnv = this.getEnvWithBal(env, envHistory)
 
-        if (!TreesRepository.closestPlayerToBall || TreesRepository.closestPlayerToBall.distanceToBall > env.ball.distance){
+        if (!TreesRepository.closestPlayerToBall || TreesRepository.closestPlayerToBall.distanceToBall > histEnv.ball.distance){
             return this.ballControlController.getCommand(env, envHistory, hearedEvents)
         }
 
         return  this.withoutBallController.getCommand(env, envHistory, hearedEvents)
+    }
+
+    getEnvWithBal(env, envHistory){
+        if (env.ball) {
+            return env
+        }
+        for (const e of envHistory) {
+            if (e.ball) {
+                return e
+            }
+        }
+        console.log('WARN BallControlController: ball not found in last 11 ticks!')
+        return null
     }
 
 }

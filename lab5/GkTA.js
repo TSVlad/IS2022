@@ -3,6 +3,8 @@ const {getDistanceBetweenObjects, getObjectCoordinates, findCrossWithGoal} = req
 const PENALTY_AREA_X = 36
 const PENALTY_AREA_Y = 20
 
+
+
 const HISTORY_SIZE = 5
 const GkTA = {
     state: {
@@ -103,7 +105,7 @@ const GkTA = {
                 return {
                     n: 'dash',
                     v: 50,
-                    a: state.envInfo.flags['gr'].angle
+                    a: state.envInfo.flags[state.envInfo.side === 'l' ? 'gl' : 'gr'].angle
                 }
             }
         },
@@ -249,8 +251,8 @@ const GkTA = {
         weakKickInSide: {
             n: "weakKickInSide", e: ['weakKickInSide_turnToBallToKickOut'],
             getCommand: (state) => {
-                const topFlags = Object.keys(state.envInfo.flags).filter(flag => flag.startsWith('ft') || flag.startsWith('frt'))
-                const bottomFlags = Object.keys(state.envInfo.flags).filter(flag => flag.startsWith('fb') || flag.startsWith('frb'))
+                const topFlags = Object.keys(state.envInfo.flags).filter(flag => flag.startsWith('ft') || flag.startsWith(state.envInfo.side === 'l' ? 'flt': 'frt'))
+                const bottomFlags = Object.keys(state.envInfo.flags).filter(flag => flag.startsWith('fb') || flag.startsWith(state.envInfo.side === 'l' ? 'flb': 'frb'))
                 const coefficient = topFlags.length > bottomFlags.length ? -1 : 1
                 return {
                     n: 'kick',
@@ -401,14 +403,16 @@ const GkTA = {
         coordinatesKnown_stayedGoal: {
             destination: 'stayedGoal',
             condition: (state) => {
-                return (state.envInfo.coordinates.x - 52.5) ** 2 + (state.envInfo.coordinates.y) ** 2 <= 1
+                return (state.envInfo.side === 'l' ? state.envInfo.coordinates.x + 52.5:state.envInfo.coordinates.x - 52.5) ** 2
+                    + (state.envInfo.coordinates.y) ** 2 <= 1
             }
         },
         // 10
         coordinatesKnown_coordinatesWrong: {
             destination: 'coordinatesWrong',
             condition: (state) => {
-                return (state.envInfo.coordinates.x - 52.5) ** 2 + (state.envInfo.coordinates.y) ** 2 > 1
+                return (state.envInfo.side === 'l' ? state.envInfo.coordinates.x + 52.5:state.envInfo.coordinates.x - 52.5) ** 2
+                    + (state.envInfo.coordinates.y) ** 2 > 1
             }
         },
         // 11
@@ -599,14 +603,14 @@ const GkTA = {
         coordinatesWrong_coordinatesWrongAndTurn45: {
             destination: 'coordinatesWrongAndTurn45',
             condition: (state) => {
-                return !state.envInfo.flags['gr']
+                return !state.envInfo.flags[state.envInfo.side === 'l'? 'gl' :'gr']
             }
         },
         // 32
         coordinatesWrong_stepToGoal: {
             destination: 'stepToGoal',
             condition: (state) => {
-                return !!state.envInfo.flags['gr']
+                return !!state.envInfo.flags[state.envInfo.side === 'l'? 'gl' :'gr']
             }
         },
         // 33
@@ -620,28 +624,28 @@ const GkTA = {
         noCoordinates_goalVisible: {
             destination: 'goalVisible',
             condition: (state) => {
-                return !!state.envInfo.flags['gr']
+                return !!state.envInfo.flags[state.envInfo.side === 'l'? 'gl' :'gr']
             }
         },
         // 35
         noCoordinates_needToStayGoalAndTurn45: {
             destination: 'needToStayGoalAndTurn45',
             condition: (state) => {
-                return !state.envInfo.flags['gr']
+                return !state.envInfo.flags[state.envInfo.side === 'l'? 'gl' :'gr']
             }
         },
         // 36
         goalVisible_stepToGoal: {
             destination: 'stepToGoal',
             condition: (state) => {
-                return state.envInfo.flags['gr'].distance > 1
+                return state.envInfo.flags[state.envInfo.side === 'l'? 'gl' :'gr'].distance > 1
             }
         },
         // 37
         goalVisible_needToStayGoalAndTurn45:{
             destination: 'needToStayGoalAndTurn45',
             condition: (state) => {
-                return state.envInfo.flags['gr'].distance <= 1
+                return state.envInfo.flags[state.envInfo.side === 'l'? 'gl' :'gr'].distance <= 1
             }
         },
         //38
@@ -652,7 +656,9 @@ const GkTA = {
                     return false
                 }
                 const ballCoordinates = getObjectCoordinates(state.envInfo.coordinates, Object.values(state.envInfo.flags), state.envInfo.ball)
-                return !(ballCoordinates && ballCoordinates.x >= PENALTY_AREA_X && Math.abs(ballCoordinates.y) <= PENALTY_AREA_Y)
+                return !(ballCoordinates
+                    &&(state.envInfo.side === 'l'? ballCoordinates.x <= -PENALTY_AREA_X: ballCoordinates.x >= PENALTY_AREA_X)
+                    && Math.abs(ballCoordinates.y) <= PENALTY_AREA_Y)
             }
         },
         //39
@@ -663,7 +669,9 @@ const GkTA = {
                     return false
                 }
                 const ballCoordinates = getObjectCoordinates(state.envInfo.coordinates, Object.values(state.envInfo.flags), state.envInfo.ball)
-                return ballCoordinates && ballCoordinates.x >= PENALTY_AREA_X && Math.abs(ballCoordinates.y) <= PENALTY_AREA_Y
+                return ballCoordinates
+                    &&(state.envInfo.side === 'l'? ballCoordinates.x <= -PENALTY_AREA_X: ballCoordinates.x >= PENALTY_AREA_X)
+                    && Math.abs(ballCoordinates.y) <= PENALTY_AREA_Y
             }
         },
         // 40

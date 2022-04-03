@@ -11,7 +11,18 @@ const getEnemiesGoals = (env) => {
         return env.flags['gl']
     }
 }
-
+const getEnvWithBall = (env, envHistory) => {
+    if (env.ball) {
+        return env
+    }
+    for (const e of envHistory) {
+        if (e.ball) {
+            return e
+        }
+    }
+    console.log('WARN BallControlController: ball not found in last 11 ticks!')
+    return null
+}
 class BallControlController {
     constructor() {
         this.passTree = PassTree

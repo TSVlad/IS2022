@@ -1,6 +1,7 @@
 const AcceptPassTree = require("../trees/AcceptPassTree");
 const HelpAttackTree = require("../trees/HelpAttackTree");
 const {getCommandFromTree} = require("../utils");
+const {TreesRepository} = require("../trees/TreesRepository");
 
 const getLastSeenCoordinates = (env, envHistory) => {
     if (env.coordinates) {
@@ -26,6 +27,10 @@ class WithoutBallController {
     }
 
     getCommand(env, envHistory, hearedEvents){
+        console.log('7 IN WITHOUT BALL CONTROLLER')
+
+        TreesRepository.decidePass = false
+
         let tree;
         const coordinates = getLastSeenCoordinates(env, envHistory)
         if (hearedEvents.pass.time >= 0 && env.time - hearedEvents.pass.time <= 10 && coordinates

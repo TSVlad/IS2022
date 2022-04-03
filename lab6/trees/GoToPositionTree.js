@@ -19,7 +19,9 @@ const getLastCoordinates = (env, envHistory) => {
 const getAlpha = (point, lastCoordinates) => {
     const a = Math.abs(point.x - lastCoordinates.x)
     const b = Math.abs(point.y - lastCoordinates.y)
-    return (Math.PI * Math.atan(a / b)) / 180
+    console.log("POINTS", point.x, point.y, lastCoordinates.x, lastCoordinates.y)
+    console.log("GET ALPHA", a, b, a / b, Math.atan(a / b))
+    return Math.ceil((180 * Math.atan(a / b)) / Math.PI)
 }
 
 const getAngleToTurn = (angle) => {
@@ -70,35 +72,37 @@ const GoToPositionTree = {
             if (!lastCoordinates) {
                 return true
             }
+            console.log('ANGLE', gamma, alpha, env.currentAngle, env.side)
 
             if (point.x > lastCoordinates.x) {
                 if (point.y > lastCoordinates.y) {
-                    TreesRepository.angleToPosition = getAngleToTurn(gamma - alpha - TreesRepository.currentAngle)
+                    TreesRepository.angleToPosition = getAngleToTurn(gamma - alpha - env.currentAngle)
                 } else if (point.y < lastCoordinates.y) {
-                    TreesRepository.angleToPosition = getAngleToTurn(-gamma + alpha - TreesRepository.currentAngle)
+                    TreesRepository.angleToPosition = getAngleToTurn(-gamma + alpha - env.currentAngle)
                 } else {
-                    const angle = env.side === 'l' ? -TreesRepository.currentAngle : 180 - TreesRepository.currentAngle
+                    const angle = env.side === 'l' ? -env.currentAngle : 180 - env.currentAngle
                     TreesRepository.angleToPosition = getAngleToTurn(angle)
                 }
             } else if (point.x < lastCoordinates.x) {
                 if (point.y > lastCoordinates.y) {
-                    TreesRepository.angleToPosition = getAngleToTurn(gamma + alpha - TreesRepository.currentAngle)
+                    TreesRepository.angleToPosition = getAngleToTurn(gamma + alpha - env.currentAngle)
                 } else if (point.y < lastCoordinates.y) {
-                    TreesRepository.angleToPosition = getAngleToTurn(-gamma - alpha - TreesRepository.currentAngle)
+                    TreesRepository.angleToPosition = getAngleToTurn(-gamma - alpha - env.currentAngle)
                 } else {
-                    const angle = env.side === 'l' ? 180 - TreesRepository.currentAngle : -TreesRepository.currentAngle
+                    const angle = env.side === 'l' ? 180 - env.currentAngle : -env.currentAngle
                     TreesRepository.angleToPosition = getAngleToTurn(angle)
                 }
             } else {
                 if (point.y > lastCoordinates.y) {
-                    const angle = env.side === 'l' ? 90 - TreesRepository.currentAngle : -90 - TreesRepository.currentAngle
+                    const angle = env.side === 'l' ? 90 - env.currentAngle : -90 - env.currentAngle
                     TreesRepository.angleToPosition = getAngleToTurn(angle)
                 } else if (point.y < lastCoordinates.y) {
-                    const angle = env.side === 'l' ? -90 - TreesRepository.currentAngle : 90 - TreesRepository.currentAngle
+                    const angle = env.side === 'l' ? -90 - env.currentAngle : 90 - env.currentAngle
                     TreesRepository.angleToPosition = getAngleToTurn(angle)
                 }
             }
-            return Math.abs(TreesRepository.angleToPosition) <= 1
+            console.log('LOG startDotWith0: ', Math.abs(Math.ceil(TreesRepository.angleToPosition)))
+            return Math.abs(Math.ceil(TreesRepository.angleToPosition)) <= 5
         },
         trueCond: 'stepForward',
         falseCond: 'turnToStartDot'
@@ -119,7 +123,7 @@ const GoToPositionTree = {
         exec: (env, envHistory, hearedEvents) => {
             return {
                 n: 'turn',
-                v: TreesRepository.angleToPosition
+                v: Math.ceil(TreesRepository.angleToPosition)
             }
         }
     },
@@ -154,6 +158,14 @@ const GoToPositionTree = {
                 v: env.ball.angle
             }
         }
+    },
+
+    // 9
+    isCurrentAngleExist: {
+        condition: (env, envHistory, hearedEvents) => !!env.currentAngle,
+
+        trueCond: 'onStartPosition',
+        falseCond: 'turn90'
     }
 }
 

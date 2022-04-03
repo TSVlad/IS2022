@@ -58,7 +58,7 @@ const PressingTree = {
     },
 
     // 5
-    isDDistanceToKick: {
+    isDistanceToKick: {
         condition: (env, envHistory, hearedEvents) => env.ball.distance <= 0.5,
         trueCond: 'isTeammateVisible',
         falseCond: 'stepToBall'
@@ -69,7 +69,7 @@ const PressingTree = {
         exec: (env, envHistory, hearedEvents) => {
             return {
                 n: 'dash',
-                v: 100,
+                v: env.ball.distance > 5 ? 100 : 50,
                 a: env.ball.angle
             }
         }
@@ -94,7 +94,7 @@ const PressingTree = {
     isTeammateVisible: {
         condition: (env, envHistory, hearedEvents) => {
             TreesRepository.teammates = env.players.filter(player => player.team === process.env.TEAM)
-            return !!TreesRepository.teammates
+            return TreesRepository.teammates.length > 0
         },
         trueCond: 'kickToTeammate',
         falseCond: 'isEnemyGoalVisible'
@@ -105,9 +105,10 @@ const PressingTree = {
     kickToTeammate:{
         exec: () => {
             const teammateToPass = TreesRepository.teammates[getRandomInt(TreesRepository.teammates.length)]
+            TreesRepository.coordinatesPass = teammateToPass.coordinates
             return {
                 n: 'kick',
-                v: teammateToPass.distance * 2.5,
+                v: teammateToPass.distance * 3,
                 a: teammateToPass.angle
             }
         }

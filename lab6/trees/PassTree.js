@@ -30,7 +30,7 @@ const PassTree = {
             return TreesRepository.teammates.length > 0
         },
         trueCond: 'isTeammatesNotInOffside',
-        falseCond: 'isBallClose'
+        falseCond: 'isBallAngleOk'
     },
 
     // 2
@@ -55,7 +55,7 @@ const PassTree = {
         },
 
         trueCond: 'thereAreFreeTeammates',
-        falseCond: 'isBallClose'
+        falseCond: 'isBallAngleOk'
     },
 
     // 3
@@ -78,7 +78,7 @@ const PassTree = {
         },
 
         trueCond: 'passAction',
-        falseCond: 'isBallClose'
+        falseCond: 'isBallAngleOk'
     },
 
     // 4
@@ -105,8 +105,8 @@ const PassTree = {
             }
         },
 
-        trueCond: 'stetToBall',
-        falseCond: 'turnToBall'
+        trueCond: 'isTeammateVisible',
+        falseCond: 'stetToBall'
     },
 
     // 6
@@ -114,7 +114,7 @@ const PassTree = {
         exec: (env, envHistory, hearedEvents) => {
             return {
                 n: 'kick',
-                v: 100,
+                v: 5,
                 a: 45
             }
         }
@@ -124,7 +124,7 @@ const PassTree = {
     isBallAngleOk:{
         condition: (env, envHistory) => Math.abs(env.ball.angle) < 5,
 
-        trueCond: 'stetToBall',
+        trueCond: 'kick45',
         falseCond: 'turnToBall'
     },
 
@@ -143,11 +143,28 @@ const PassTree = {
         exec: (env, envHistory, hearedEvents) => {
             return {
                 n: 'dash',
-                v: 200,
+                v: env.ball.distance > 5 ? 100 : 50,
                 a: env.ball.angle
             }
         }
+    },
+
+    // 10
+    isBallVisible:{condition: (env) => !!env.ball,
+        trueCond: 'isBallClose',
+        falseCond: 'turn45'
+    },
+
+    // 11
+    turn45:{
+        exec: (env, envHistory, hearedEvents) => {
+            return {
+                n: 'turn',
+                v: 45
+            }
+        }
     }
+
 }
 
 module.exports = PassTree

@@ -25,20 +25,20 @@ const isCloserToMyGoal = (coords1, coords2, side) => {
     }
 }
 
-const getAngleForStepToEnemyGoal = () => {
-    return - TreesRepository.currentAngle
+const getAngleForStepToEnemyGoal = (env) => {
+    return - env.currentAngle
 }
 
-const getAngleForStepToMyGoal = () => {
-    return TreesRepository.currentAngle >= 0 ? 180 - TreesRepository.currentAngle
-        : -180 - TreesRepository.currentAngle
+const getAngleForStepToMyGoal = (env) => {
+    return env.currentAngle >= 0 ? 180 - env.currentAngle
+        : -180 - env.currentAngle
 }
 
-const getAngleToCoordinatesByX = (coordinates, targetCoordinates, side) => {
+const getAngleToCoordinatesByX = (env, coordinates, targetCoordinates, side) => {
     if (side === 'l') {
-        return coordinates.x < targetCoordinates.x ? getAngleForStepToEnemyGoal() : getAngleForStepToMyGoal()
+        return coordinates.x < targetCoordinates.x ? getAngleForStepToEnemyGoal(env) : getAngleForStepToMyGoal(env)
     } else {
-        return coordinates.x > targetCoordinates.x ? getAngleForStepToEnemyGoal() : getAngleForStepToMyGoal()
+        return coordinates.x > targetCoordinates.x ? getAngleForStepToEnemyGoal(env) : getAngleForStepToMyGoal(env)
     }
 }
 
@@ -91,18 +91,18 @@ const getBordersForDefZone= (ballCoordinates, side) => {
     }
 }
 
-const getAngleForZone = (coordinates, borders, side) => {
+const getAngleForZone = (env, coordinates, borders, side) => {
     if (side === 'l') {
         if (coordinates.x > borders.top) {
-            return getAngleForStepToMyGoal()
+            return getAngleForStepToMyGoal(env)
         } else {
-            return getAngleForStepToEnemyGoal()
+            return getAngleForStepToEnemyGoal(env)
         }
     } else {
         if (coordinates.x > borders.top) {
-            return getAngleForStepToEnemyGoal()
+            return getAngleForStepToEnemyGoal(env)
         } else {
-            return getAngleForStepToMyGoal()
+            return getAngleForStepToMyGoal(env)
         }
     }
 }
@@ -181,7 +181,7 @@ const HelpAttackTree = {
             return {
                 n: 'dash',
                 v: 100,
-                a: getAngleForStepToMyGoal()
+                a: getAngleForStepToMyGoal(env)
             }
         }
     },
@@ -206,7 +206,7 @@ const HelpAttackTree = {
             return {
                 n: 'dash',
                 v: 100,
-                a: -TreesRepository.currentAngle
+                a: -env.currentAngle
             }
         }
     },
@@ -255,7 +255,7 @@ const HelpAttackTree = {
             return {
                 n: 'dash',
                 v: 100,
-                a: getAngleToCoordinatesByX(coordinates , ball.coordinates, env.side)
+                a: getAngleToCoordinatesByX(env, coordinates , ball.coordinates, env.side)
             }
 
         }
@@ -326,7 +326,7 @@ const HelpAttackTree = {
             const coordinates = getLastSeenCoordinates(env, envHistory)
             return {
                 n: 'dash',
-                a: getAngleForZone(coordinates, borders, env.side)
+                a: getAngleForZone(env, coordinates, borders, env.side)
             }
         }
     },
@@ -363,7 +363,7 @@ const HelpAttackTree = {
             const coordinates = getLastSeenCoordinates(env, envHistory)
             return {
                 n: 'dash',
-                a: getAngleForZone(coordinates, borders, env.side)
+                a: getAngleForZone(env, coordinates, borders, env.side)
             }
         }
     },
@@ -384,7 +384,7 @@ const HelpAttackTree = {
             }
             TreesRepository.teammatesSortedByX = teammates.sort((p1, p2) => compPlayersByX(p1, p2, env.side))
 
-            const enemies = []
+            let enemies = []
             for (let i = 0; i < 4; i++) {
                 enemies = [...teammates, ...(envHistory[i].players.filter(player => player.team !== process.env.TEAM && player.coordinates))]
             }

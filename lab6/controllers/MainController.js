@@ -1,12 +1,18 @@
 const AttackController = require("./AttackController");
 const DefenceController = require("./DefenceController");
 const {getDistanceBetweenObjects} = require("../../field");
-const TreesRepository = require("../trees/TreesRepository");
+const {TreesRepository} = require("../trees/TreesRepository");
+const {getCommandFromTree} = require("../utils");
+const ShotTree = require("../trees/ShotTree");
+const BallControlController = require("./BallControlController");
+const TaManager = require("../../lab5/TaManager");
 
 class MainController {
     constructor() {
         this.atackController = new AttackController()
         this.defenceController = new DefenceController()
+        this.taManager = new TaManager()
+
     }
 
     prepareCoord(num){
