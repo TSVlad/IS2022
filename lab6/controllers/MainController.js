@@ -9,7 +9,23 @@ class MainController {
         this.defenceController = new DefenceController()
     }
 
+    prepareCoord(num){
+        var result = num < 0 ? '-' : '+'
+        result += Math.abs(num.toFixed(0))
+        return result
+    }
+
+    getDistance(coords1, coords2) {
+        return Math.sqrt((coords1.x - coords2.x) ** 2 + (coords1.y - coords2.y) ** 2)
+    }
+
     getCommand(env, envHistory, hearedEvents){
+        console.log('4 IN MAIN CONTROLLER')
+
+        if (process.env.GK) {
+            return this.taManager.getCommand()
+        }
+
         let envWithBall = env
         if (!env.ball) {
             envWithBall = null
@@ -26,7 +42,7 @@ class MainController {
             TreesRepository.coordinatesPass = null
             return {
                 n: 'say',
-                v: `\" pass ${process.env.TEAM} ${coordinatesPass.x} ${coordinatesPass.y} \"`
+                v: ` p${env.side}${this.prepareCoord(coordinatesPass.x)}${this.prepareCoord(coordinatesPass.y)}`
             }
         }
 
@@ -36,8 +52,8 @@ class MainController {
             return this.defenceController.getCommand(env, envHistory, hearedEvents)
         }
         return {
-            a: 'turn',
-            v: '45'
+            n: 'turn',
+            v: '90'
         }
     }
 

@@ -1,6 +1,6 @@
 const {getDistanceBetweenObjects, getObjectCoordinates, findCrossWithGoal} = require("../field");
 
-const PENALTY_AREA_X = 28
+const PENALTY_AREA_X = 36
 const PENALTY_AREA_Y = 20
 
 const HISTORY_SIZE = 5
@@ -56,7 +56,7 @@ const GkTA = {
         // 3
         ballVisible: {
             n: "ballVisible",
-            e: ['ballVisible_turnToBall', 'ballVisible_needStayAtGoal', 'ballVisible_readyToAction']
+            e: ['undefinedBallCoordinates', 'ballVisible_turnToBall', 'ballVisible_needStayAtGoal', 'ballVisible_readyToAction']
         },
         // 4
         turnToBall: {
@@ -94,6 +94,12 @@ const GkTA = {
         stepToGoal: {
             n: "stepToGoal", e: ['stepToGoal_needStayAtGoal'],
             getCommand: (state) => {
+                if (!state.envInfo.flags[state.envInfo.side === 'l' ? 'gl' : 'gr']) {
+                    return {
+                        n: 'turn',
+                        v: 45
+                    }
+                }
                 return {
                     n: 'dash',
                     v: 50,
@@ -133,10 +139,16 @@ const GkTA = {
         catchBall: {
             n: "catchBall", e: [],
             getCommand: (state) => {
+                console.log('CATCH_BALL', state.envInfo.ball.angle)
+
+                const angle = Math.abs(state.envInfo.ball.angle) <= 5 ? state.envInfo.ball.angle : state.envInfo.ball.angle < 0 ? -30 : 30
                 return {
-                    n: 'catch',
-                    // v: state.envInfo.ball.angle
-                    v: 0
+                    // n: 'catch',
+                    // v: angle
+                    // v: 0
+                    n: 'kick',
+                    v: 200,
+                    a: 0
                 }
             }
         },
@@ -219,11 +231,11 @@ const GkTA = {
         },
         // 19
         needGoToBallAndStepToBall: {
-            n: "needGoToBallAndStepToBall", e: ['needGoToBallAndStepToBall_exitToKick'],
+            n: "needGoToBallAndStepToBall", e: [],
             getCommand: (state) => {
                 return {
                     n: 'dash',
-                    v: 50,
+                    v: 100,
                     a: state.envInfo.ball.angle
                 }
             }
@@ -325,21 +337,41 @@ const GkTA = {
         ballVisible_turnToBall: {
             destination: 'turnToBall',
             condition: (state) => {
-                return state.envInfo.ball.distance >= 20 && state.envInfo.ball.distance <= 30
+                const ball = state.envInfo.ball
+                const ballCoordinates = state.envInfo.coordinates ? getObjectCoordinates(state.envInfo.coordinates, Object.values(state.envInfo.flags), ball) : null
+
+                if (!ballCoordinates) {
+                    return false
+                }
+
+                const dist = Math.sqrt(Math.pow(state.envInfo.side === 'l' ? ballCoordinates.x + 52.5: ballCoordinates.x - 52.5, 2) + Math.pow(ballCoordinates.y, 2))
+
+                return dist <= 30
+                    && ( (state.envInfo.side === 'l' ? ballCoordinates.x > -PENALTY_AREA_X : ballCoordinates.x < PENALTY_AREA_X) || Math.abs(ballCoordinates.y) > 20)
             }
         },
         //4
         ballVisible_needStayAtGoal: {
             destination: 'needStayAtGoal',
             condition: (state) => {
-                return state.envInfo.ball.distance > 30
+                const ball = state.envInfo.ball
+                const ballCoordinates = state.envInfo.coordinates ? getObjectCoordinates(state.envInfo.coordinates, Object.values(state.envInfo.flags), ball) : null
+                if (!ballCoordinates) {
+                    return false
+                }
+                const distFromGoals = Math.sqrt(
+                    Math.pow(state.envInfo.side === 'l' ? ballCoordinates.x + 52.5 :ballCoordinates.x - 52.5, 2)
+                    + Math.pow(ballCoordinates.y, 2))
+                return distFromGoals > 30
             }
         },
         // 5
         ballVisible_readyToAction: {
             destination: 'readyToAction',
             condition: (state) => {
-                return state.envInfo.ball.distance < 20
+                const ballCoordinates = state.envInfo.coordinates ? getObjectCoordinates(state.envInfo.coordinates, Object.values(state.envInfo.flags), state.envInfo.ball) : null
+                return (state.envInfo.side === 'l' ? ballCoordinates.x <= -PENALTY_AREA_X : ballCoordinates.x >= PENALTY_AREA_X)
+                    && Math.abs(ballCoordinates.y) <= PENALTY_AREA_Y
             }
         },
         // 6
@@ -409,55 +441,44 @@ const GkTA = {
         },
         // 15
         readyToAction_catching: {
-            destination: 'catching',
+            destination: 'catchBall',
             condition: (state) => {
-                const ball = state.envInfo.ball
-                const playersNearBall = state.envInfo.players.filter(player => getDistanceBetweenObjects(player, ball) < ball.distance)
-                const ballCoordinates = state.envInfo.coordinates ? getObjectCoordinates(state.envInfo.coordinates, Object.values(state.envInfo.flags), ball) : null
-                let previousBallDistance = null
-                let secondPreviousDistance = null
-                for (const env of state.envHistory) {
+
+                let prevBall
+                for (let env of state.envHistory) {
                     if (env.ball) {
-                        if (!previousBallDistance) {
-                            previousBallDistance = env.ball.distance
-                            continue
-                        }
-                        secondPreviousDistance = env.ball.distance
+                        prevBall = env.ball
                         break
+                    } else {
+                        console.log(env)
                     }
                 }
-                console.log('15 READY_CATCHING', playersNearBall.length, previousBallDistance, secondPreviousDistance, ball.distance, ballCoordinates)
 
-                return !(playersNearBall.length === 0
-                    && (previousBallDistance && secondPreviousDistance && previousBallDistance <= ball.distance && secondPreviousDistance <= ball.distance)
-                    && (ballCoordinates && ballCoordinates.x >= PENALTY_AREA_X && Math.abs(ballCoordinates.y) <= PENALTY_AREA_Y))
+                const ballCoord = getObjectCoordinates(state.envInfo.coordinates, Object.values(state.envInfo.flags), state.envInfo.ball)
+
+
+                console.log('15', 'ball  dist ', state.envInfo.ball.distance, ' prev ', prevBall ? prevBall.distance : undefined)
+                return state.envInfo.ball.distance <= 3 && prevBall && prevBall.distance !== state.envInfo.ball.distance
             }
         },
         // 16
         readyToAction_exitToKick: {
             destination: 'exitToKick',
             condition: (state) => {
-                const ball = state.envInfo.ball
-                const playersNearBall = state.envInfo.players.filter(player => getDistanceBetweenObjects(player, ball) < ball.distance)
-                const ballCoordinates = state.envInfo.coordinates ? getObjectCoordinates(state.envInfo.coordinates, Object.values(state.envInfo.flags), ball) : null
-                let previousBallDistance = null
-                let secondPreviousDistance = null
-                for (const env of state.envHistory) {
+                let prevBall
+                for (let env of state.envHistory) {
                     if (env.ball) {
-                        if (!previousBallDistance) {
-                            previousBallDistance = env.ball.distance
-                            continue
-                        }
-                        secondPreviousDistance = env.ball.distance
+                        prevBall = env.ball
                         break
+                    } else {
+                        console.log(env)
                     }
                 }
-
-                console.log('16 READY_EXIT', playersNearBall.length, previousBallDistance, ball.distance, ballCoordinates)
-
-                return playersNearBall.length === 0
-                    && (previousBallDistance && secondPreviousDistance && previousBallDistance <= ball.distance && secondPreviousDistance <= ball.distance)
-                    && (ballCoordinates && ballCoordinates.x >= PENALTY_AREA_X && Math.abs(ballCoordinates.y) <= PENALTY_AREA_Y)
+                console.log('16', 'ball  dist ', state.envInfo.ball.distance, ' prev ', prevBall ? prevBall.distance : undefined)
+                if (!prevBall) {
+                    return true
+                }
+                return state.envInfo.ball.distance > 3 || prevBall.distance === state.envInfo.ball.distance
             }
         },
         // 17
@@ -501,7 +522,7 @@ const GkTA = {
                 if (!state.envInfo.ball) {
                     return false
                 }
-                return Math.abs(state.envInfo.ball.angle) > 1
+                return Math.abs(state.envInfo.ball.angle) > 20
             }
         },
         // 22
@@ -511,7 +532,7 @@ const GkTA = {
                 if (!state.envInfo.ball) {
                     return false
                 }
-                return Math.abs(state.envInfo.ball.angle) <= 1
+                return Math.abs(state.envInfo.ball.angle) <= 20
             }
         },
         // 23
@@ -650,6 +671,13 @@ const GkTA = {
             destination: 'needStayAtGoal',
             condition: (state) => {
                 return true
+            }
+        },
+        // 41
+        undefinedBallCoordinates:{
+            destination: 'exitToKick',
+            condition: (state) => {
+                return !state.envInfo.coordinates || !getObjectCoordinates(state.envInfo.coordinates, Object.values(state.envInfo.flags), state.envInfo.ball)
             }
         },
     }

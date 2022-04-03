@@ -47,9 +47,7 @@ module.exports = {
     },
 
     parseVisibleData(data) {
-        console.log(data.p[0])
         const result = {
-            time: data.p[0],
             flags: [],
             players: [],
             ball: null
@@ -82,6 +80,7 @@ module.exports = {
                         angle: data.p[i].p[1],
                         team: data.p[i].cmd.p[1] ? data.p[i].cmd.p[1].replace(/"/g, '') : undefined,
                         number: data.p[i].cmd.p[2] ? data.p[i].cmd.p[2] : undefined,
+                        goalie: !!data.p[i].p[3]
                     })
                     break
                 case 'b':

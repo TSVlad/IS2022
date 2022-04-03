@@ -1,4 +1,4 @@
-const TreesRepository = require("./TreesRepository");
+const {TreesRepository} = require("./TreesRepository");
 
 const getStartPosition = (side) => {
     return side === 'l' ? {x: process.env.X, y: process.env.Y} : {x: -process.env.X, y: -process.env.Y}
@@ -44,7 +44,7 @@ const GoToPositionTree = {
         condition: (env, envHistory, hearedEvents) => env.time % 10 >= 1 && env.time % 10 <= 4,
 
         trueCond: 'turn90',
-        falseCond: 'onStartPosition'
+        falseCond: 'isCurrentAngleExist'
     },
 
     // 2
@@ -52,7 +52,8 @@ const GoToPositionTree = {
         exec: (env, envHistory, hearedEvents) => {
             return {
                 n: 'turn',
-                v: 90
+                v: 90,
+                mandatory: true
             }
         }
     },
@@ -61,7 +62,7 @@ const GoToPositionTree = {
     startDotWith0: {
         condition: (env, envHistory, hearedEvents) => {
             const point = getStartPosition(env.side)
-            const lastCoordinates = getLastCoordinates()
+            const lastCoordinates = getLastCoordinates(env, envHistory)
             const alpha = getAlpha(point, lastCoordinates)
             const gamma = env.side === 'l' ? 90 : -90
 
@@ -127,8 +128,10 @@ const GoToPositionTree = {
     onStartPosition: {
         condition: (env, envHistory, hearedEvents) => {
             const point = getStartPosition(env.side)
-            const lastCoordinates = getLastCoordinates()
-            return Math.sqrt((point.x - lastCoordinates.x) ** 2 + (point.y - lastCoordinates.y) ** 2) <= 1
+            const lastCoordinates = getLastCoordinates(env, envHistory)
+
+            console.log('LOG onStartPosition:', Math.sqrt((point.x - lastCoordinates.x) ** 2 + (point.y - lastCoordinates.y) ** 2))
+            return Math.sqrt((point.x - lastCoordinates.x) ** 2 + (point.y - lastCoordinates.y) ** 2) <= 3
         },
 
         trueCond: 'isBallVisible',

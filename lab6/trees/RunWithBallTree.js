@@ -65,7 +65,7 @@ const RunWithBallTree  = {
         exec: (env, envHistory, hearedEvents) => {
             return  {
                 n: 'kick',
-                v: 150,
+                v: 15,
                 a:  env.flags[env.side === 'l' ?'gr' : 'gl'].angle
             }
         }

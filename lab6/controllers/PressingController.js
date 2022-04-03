@@ -7,6 +7,7 @@ class PressingController {
     }
 
     getCommand(env, envHistory, hearedEvents){
+        console.log('6 IN PRESSING CONTROLLER')
         return getCommandFromTree(this.pressingTree, env, envHistory, hearedEvents)
     }
 

@@ -7,6 +7,7 @@ class PositionController {
     }
 
     getCommand(env, envHistory, hearedEvents){
+        console.log('5 IN POSITION CONTROLLER')
         return getCommandFromTree(this.goToPositionTree, env, envHistory, hearedEvents)
     }
 

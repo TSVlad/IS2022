@@ -1,9 +1,8 @@
-const ShooterTA = require("./ShooterTA");
 const GkTA = require("./GkTA");
 class TaManager {
 
     constructor() {
-        this.ta = process.env.GK ? GkTA : ShooterTA
+        this.ta = GkTA
     }
 
     getCommand() {

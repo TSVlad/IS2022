@@ -1,4 +1,4 @@
-const TreesRepository = require("./TreesRepository");
+const {TreesRepository} = require("./TreesRepository");
 const {getRandomInt} = require("../utils");
 
 const isFartherByXToEnemiesGoals = (coordinates1, coordinates2, side) => {
@@ -9,10 +9,18 @@ const isFartherByXToEnemiesGoals = (coordinates1, coordinates2, side) => {
     }
 }
 
+const isOwnHalf = (coordinates, side) => {
+    if (side === 'l') {
+        return coordinates.x < 0
+    } else {
+        return coordinates.x > 0
+    }
+}
+
 const PassTree = {
     root: {
         exec: () => {},
-        next: 'isTeammateVisible',
+        next: 'isBallVisible',
     },
 
     // 1
@@ -30,6 +38,12 @@ const PassTree = {
         condition: (env, envHistory) => {
             TreesRepository.enemies = env.players.filter(player => player.team !== process.env.TEAM)
             TreesRepository.teammatesNotInOffside = TreesRepository.teammates.filter(player => {
+                if (player.goalie) {
+                    return false
+                }
+                if (isOwnHalf(player.coordinates, env.side)) {
+                    return true
+                }
                 for (const enemy of TreesRepository.enemies) {
                     if (enemy.coordinates && player.coordinates && isFartherByXToEnemiesGoals(enemy.coordinates, player.coordinates)) {
                         return true
@@ -56,7 +70,7 @@ const PassTree = {
                 }
 
                 if (flag) {
-                    TreesRepository.freeTeammatesNotInOffside.append(teammate)
+                    TreesRepository.freeTeammatesNotInOffside.push(teammate)
                 }
             }
 
@@ -74,7 +88,7 @@ const PassTree = {
             TreesRepository.coordinatesPass = targetTeammate.coordinates
             return {
                 n: 'kick',
-                v: 2.5 * targetTeammate.distance,
+                v: 3 * targetTeammate.distance,
                 a: targetTeammate.angle
             }
         }
@@ -119,7 +133,7 @@ const PassTree = {
         exec: (env, envHistory, hearedEvents) => {
             return {
                 n: 'turn',
-                a: !!env.ball ? env.ball.angle : 45
+                v: !!env.ball ? env.ball.angle : 45
             }
         }
     },

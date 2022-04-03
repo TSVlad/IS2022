@@ -26,7 +26,7 @@ class Agent {
     }
 
     socketSend(cmd, value) {
-        console.log(cmd, value)
+        console.log('COMMAND SEND', cmd, value)
         this.socket.sendMsg(`(${cmd} ${value})`)
     }
 

@@ -1,4 +1,4 @@
-const TreesRepository = require("./TreesRepository");
+const {TreesRepository} = require("./TreesRepository");
 const {getRandomInt} = require("../utils");
 
 const getLeftF = (env) => {
@@ -23,7 +23,7 @@ const ShotTree = {
                 TreesRepository.enemiesInGoals = env.players.filter(player => player.team !== process.env.TEAM && player.angle >= leftF && player.angle <= rightF)
                 return TreesRepository.enemiesInGoals.length === 0
             } else {
-                return false
+                return true
             }
         },
 
@@ -37,7 +37,7 @@ const ShotTree = {
             return {
                 n: 'kick',
                 v: 100,
-                a: env.flags[env.side === 'l' ?'gr' : 'gl']
+                a: env.flags[env.side === 'l' ?'gr' : 'gl'] ? env.flags[env.side === 'l' ?'gr' : 'gl'].angle : 0
             }
         }
     },
@@ -47,9 +47,13 @@ const ShotTree = {
         exec:(env) => {
             const leftFlag = getLeftF(env)
             const rightFlag = getRightF(env)
-            const step = Math.ceil(Math.abs(leftFlag - rightFlag) / 5)
+            const step = Math.ceil(Math.abs(leftFlag.angle - rightFlag.angle) / 7)
 
-            const rand = getRandomInt(10) > 5
+            console.log("STEP:", step)
+
+            const rand = Math.random() > 0.5
+
+            console.log('RAND:', rand)
 
             if (rand) {
                 for (let i = leftFlag + step; i <= rightFlag - step; i += step){
@@ -69,10 +73,11 @@ const ShotTree = {
                     }
                 }
             } else {
-                for (let i = rightFlag - step; i >= leftFlag + step; i -= step){
+                for (let i = rightFlag.angle - step/2; i >= leftFlag.angle + step/2; i -= step){
                     let foundEnemy = false
                     for (let v of TreesRepository.enemiesInGoals){
                         if (i - step < v.angle && v.angle < i + step ){
+                            console.log('ENEMY FOUNDED2')
                             foundEnemy = true
                             break
                         }

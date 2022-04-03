@@ -1,4 +1,4 @@
-const TreesRepository = require("./TreesRepository");
+const {TreesRepository} = require("./TreesRepository");
 const state = {}
 
 const compPlayersByX = (player1, player2, side) => {
@@ -136,7 +136,6 @@ const HelpAttackTree = {
     // 2
     turn90: {
         exec: (env, envHistory, hearedEvents) => {
-            TreesRepository.addAngle(90)
             return  {
                 n: 'turn',
                 v: 90
@@ -379,15 +378,15 @@ const HelpAttackTree = {
     // 18
     rewriteAllValues: {
         exec: (env, envHistory, hearedEvents) => {
-            const teammates = []
-            for (let i = 0; i < 4; i++) {
-                teammates.push(envHistory[i].players.filter(player => player.team === process.env.TEAM && player.coordinates))
+            let teammates = []
+            for (let i = 0; i < 4 && i < envHistory.length; i++) {
+                teammates = [...teammates, ...(envHistory[i].players.filter(player => player.team === process.env.TEAM && player.coordinates))]
             }
             TreesRepository.teammatesSortedByX = teammates.sort((p1, p2) => compPlayersByX(p1, p2, env.side))
 
             const enemies = []
             for (let i = 0; i < 4; i++) {
-                enemies.push(envHistory[i].players.filter(player => player.team !== process.env.TEAM && player.coordinates))
+                enemies = [...teammates, ...(envHistory[i].players.filter(player => player.team !== process.env.TEAM && player.coordinates))]
             }
             TreesRepository.enemiesSortedByX = enemies.sort((p1, p2) => compPlayersByX(p1, p2, env.side))
         },

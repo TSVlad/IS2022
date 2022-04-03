@@ -1,13 +1,13 @@
 const PositionController = require("./PositionController");
 const PressingController = require("./PressingController");
 
-const getLastSeenBall = (env, envHistory) => {
+const getEnvWithBall = (env, envHistory) => {
     if (env.ball) {
-        return env.ball
+        return env
     }
     for (const e of envHistory) {
         if (e.ball) {
-            return e.ball
+            return e
         }
     }
     console.log('WARN HelpAttackTree getLastSeenBall: ball not found in last 11 ticks!')
@@ -25,12 +25,23 @@ class DefenceController {
     }
 
     getCommand(env, envHistory, hearedEvents) {
-        let ball = getLastSeenBall(env, envHistory);
-        if (!ball || !ball.coordinates) {
+        console.log('3 IN DEFENCE CONTROLLER')
+
+        TreesRepository.decidePass = false
+
+        let histEnv = getEnvWithBall(env, envHistory);
+
+        if (!histEnv || !histEnv.ball.coordinates) {
             return this.positionController.getCommand(env, envHistory, hearedEvents)
         }
-        const teammatesCloser = env.players.filter(player => player.coordinates && player.team === process.env.TEAM
-            && getDistance(player.coordinates, ball.coordinates) < ball.distance)
+        const teammatesCloser = histEnv.players.filter(player =>
+            player.coordinates
+            && player.team === process.env.TEAM
+            /*&& getDistance(player.coordinates, ball.coordinates) < ball.distance */
+            && histEnv.ball.distance > player.distance)
+        console.log('TEAMMATES CLOSER:')
+        console.log(teammatesCloser)
+        console.log('BETA IS:', env.currentAngle)
         return teammatesCloser.length > 0 ? this.positionController.getCommand(env, envHistory, hearedEvents)
             : this.pressingController.getCommand(env, envHistory, hearedEvents)
     }
